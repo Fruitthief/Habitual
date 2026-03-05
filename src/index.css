@@ -12,7 +12,7 @@
   --text: #f0f0f0;
   --text-secondary: #888888;
   --text-muted: #4a4a4a;
-  --brand: #2d5a27;
+  --brand: #22c55e;
   --brand-text: #4ade80;
   --brand-bg: #0a1a09;
 }
@@ -59,11 +59,11 @@
     @apply w-full text-white font-semibold py-3.5 px-6 rounded-xl
            active:scale-95 transition-all duration-150
            disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100;
-    background-color: #2d5a27;
+    background-color: #22c55e;
   }
 
   .btn-primary:hover:not(:disabled) {
-    background-color: #3a7033;
+    background-color: #16a34a;
   }
 
   .btn-secondary {
@@ -96,8 +96,8 @@
 
   .input-field:focus {
     outline: none;
-    border-color: #2d5a27;
-    box-shadow: 0 0 0 3px rgba(45, 90, 39, 0.2);
+    border-color: #22c55e;
+    box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
   }
 
   .skeleton {
@@ -159,12 +159,12 @@
 .dark .border-gray-100 { border-color: #1e1e1e !important; }
 .dark .border-gray-200 { border-color: #2a2a2a !important; }
 .dark .border-gray-300 { border-color: #333333 !important; }
-.dark .border-brand    { border-color: #2d5a27 !important; }
+.dark .border-brand    { border-color: #22c55e !important; }
 
 /* Rings */
-.dark .ring-brand\/40  { --tw-ring-color: rgba(45, 90, 39, 0.4) !important; }
-.dark .focus\:ring-brand\/20:focus { --tw-ring-color: rgba(45, 90, 39, 0.2) !important; }
-.dark .focus\:border-brand:focus { border-color: #2d5a27 !important; }
+.dark .ring-brand\/40  { --tw-ring-color: rgba(34, 197, 94, 0.4) !important; }
+.dark .focus\:ring-brand\/20:focus { --tw-ring-color: rgba(34, 197, 94, 0.2) !important; }
+.dark .focus\:border-brand:focus { border-color: #22c55e !important; }
 
 /* Error states (red) */
 .dark .bg-red-50    { background-color: #1a0808 !important; }

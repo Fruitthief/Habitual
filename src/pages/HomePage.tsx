@@ -9,7 +9,6 @@ import { todayStr, dateToStr, addDays, formatDisplayDate } from '@/lib/dates'
 import { haptic } from '@/lib/haptics'
 import { HabitCard } from '@/components/habits/HabitCard'
 import { CelebrationBanner } from '@/components/home/CelebrationBanner'
-import { StatsRow } from '@/components/home/StatsRow'
 import { HabitCardSkeleton } from '@/components/ui/Skeleton'
 import { BottomNav } from '@/components/layout/BottomNav'
 
@@ -82,33 +81,6 @@ export default function HomePage() {
     if (next <= todayStr()) setViewDate(next)
   }
 
-  // --- Stats (always computed against today, not viewDate) ---
-  const today = todayStr()
-  const monthPrefix = today.substring(0, 7)
-  const dayOfMonth = parseInt(today.split('-')[2], 10)
-
-  const monthCompletions = useMemo(
-    () => completions.filter((c) => c.completed_date.startsWith(monthPrefix) && !c.is_cheat_day),
-    [completions, monthPrefix],
-  )
-
-  const statsData = useMemo(() => {
-    const totalThisMonth = monthCompletions.length
-    const completionRate =
-      habits.length > 0 && dayOfMonth > 0
-        ? Math.min(100, Math.round((totalThisMonth / (habits.length * dayOfMonth)) * 100))
-        : 0
-
-    let bestCurrentStreak = 0
-    let longestStreak = 0
-    for (const habit of habits) {
-      const s = getStreak(habit.id)
-      if (s.current > bestCurrentStreak) bestCurrentStreak = s.current
-      if (s.longest > longestStreak) longestStreak = s.longest
-    }
-    return { completionRate, bestCurrentStreak, longestStreak, totalThisMonth }
-  }, [habits, monthCompletions, dayOfMonth])
-
   // --- Goals summary ---
   const activeGoals = useMemo(() => goals.filter((g) => !g.completed_at), [goals])
   const goalsSummary = useMemo(() => {
@@ -178,7 +150,7 @@ export default function HomePage() {
                 className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: `${progress}%`,
-                  backgroundColor: progress === 100 ? '#22c55e' : '#2d5a27',
+                  backgroundColor: progress === 100 ? '#4ade80' : '#22c55e',
                 }}
               />
             </div>
@@ -230,25 +202,15 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* Goals summary + Stats */}
-        {!loading && habits.length > 0 && (
-          <>
-            {goalsSummary && (
-              <button
-                onClick={() => navigate('/goals')}
-                className="w-full text-left mt-4 card flex items-center justify-between gap-2 active:opacity-80 transition-opacity"
-              >
-                <span className="text-sm text-gray-600">🎯 {goalsSummary}</span>
-                <span className="text-gray-300 text-sm flex-shrink-0">›</span>
-              </button>
-            )}
-            <StatsRow
-              completionRate={statsData.completionRate}
-              bestCurrentStreak={statsData.bestCurrentStreak}
-              longestStreak={statsData.longestStreak}
-              totalThisMonth={statsData.totalThisMonth}
-            />
-          </>
+        {/* Goals summary */}
+        {!loading && goalsSummary && (
+          <button
+            onClick={() => navigate('/goals')}
+            className="w-full text-left mt-4 card flex items-center justify-between gap-2 active:opacity-80 transition-opacity"
+          >
+            <span className="text-sm text-gray-600">🎯 {goalsSummary}</span>
+            <span className="text-gray-300 text-sm flex-shrink-0">›</span>
+          </button>
         )}
 
         {/* Back to today button */}

@@ -89,7 +89,7 @@ export function GoalCard({ goal, linkedHabits = [], onToggleComplete, onDelete, 
               className="h-full rounded-full transition-all duration-500"
               style={{
                 width: `${progressPct}%`,
-                backgroundColor: progressPct === 100 ? '#22c55e' : '#2d5a27',
+                backgroundColor: progressPct === 100 ? '#4ade80' : '#22c55e',
               }}
             />
           </div>
