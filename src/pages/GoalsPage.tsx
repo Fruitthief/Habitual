@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useAuthStore } from '@/store/authStore'
 import { useGoalStore } from '@/store/goalStore'
 import { useHabitStore } from '@/store/habitStore'
@@ -11,12 +11,16 @@ import { BottomNav } from '@/components/layout/BottomNav'
 
 export default function GoalsPage() {
   const { user } = useAuthStore()
-  const { goals, loading, loadGoals, addGoal, updateGoal, completeGoal, deleteGoal, getHabitsForGoal } =
+  const { goals, loading, loadGoals, addGoal, updateGoal, completeGoal, uncompleteGoal, deleteGoal, getHabitsForGoal } =
     useGoalStore()
   const { habits, loadHabits } = useHabitStore()
   const { addToast } = useUIStore()
   const [showAdd, setShowAdd] = useState(false)
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
+
+  // Soft-delete: IDs hidden from UI until timer fires (supports undo)
+  const [pendingDeleteIds, setPendingDeleteIds] = useState<Set<string>>(new Set())
+  const pendingTimers = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map())
 
   useEffect(() => {
     if (user) {
@@ -36,19 +40,51 @@ export default function GoalsPage() {
     addToast('Goal updated ✓', 'success')
   }
 
-  async function handleComplete(id: string) {
-    await completeGoal(id)
-    addToast('Goal completed! 🎉', 'success')
+  function handleToggleComplete(id: string) {
+    const goal = goals.find((g) => g.id === id)
+    if (!goal) return
+    if (goal.completed_at) {
+      uncompleteGoal(id)
+      addToast('Goal reopened', 'info')
+    } else {
+      completeGoal(id)
+      addToast('Goal completed! 🎉', 'success')
+    }
   }
 
-  async function handleDelete(id: string) {
-    await deleteGoal(id)
-    addToast('Goal deleted', 'info')
+  function handleDelete(id: string) {
+    // Hide from UI immediately
+    setPendingDeleteIds((prev) => new Set([...prev, id]))
+
+    // Start deletion timer (slightly longer than toast so undo works)
+    const timer = setTimeout(async () => {
+      await deleteGoal(id)
+      pendingTimers.current.delete(id)
+      setPendingDeleteIds((prev) => {
+        const next = new Set(prev)
+        next.delete(id)
+        return next
+      })
+    }, 4000)
+
+    pendingTimers.current.set(id, timer)
+
+    addToast('Goal deleted', 'info', {
+      label: 'Undo',
+      onClick: () => {
+        clearTimeout(pendingTimers.current.get(id))
+        pendingTimers.current.delete(id)
+        setPendingDeleteIds((prev) => {
+          const next = new Set(prev)
+          next.delete(id)
+          return next
+        })
+      },
+    })
   }
 
-  // Separate active and completed goals
-  const activeGoals = goals.filter((g) => !g.completed_at)
-  const completedGoals = goals.filter((g) => g.completed_at)
+  const activeGoals = goals.filter((g) => !g.completed_at && !pendingDeleteIds.has(g.id))
+  const completedGoals = goals.filter((g) => g.completed_at && !pendingDeleteIds.has(g.id))
 
   return (
     <>
@@ -66,7 +102,7 @@ export default function GoalsPage() {
             <GoalCardSkeleton />
             <GoalCardSkeleton />
           </div>
-        ) : goals.length === 0 ? (
+        ) : goals.filter((g) => !pendingDeleteIds.has(g.id)).length === 0 ? (
           <div className="text-center py-16 animate-fade-in">
             <div className="text-5xl mb-4">🎯</div>
             <h3 className="font-display text-xl font-semibold text-gray-700 mb-2">
@@ -84,7 +120,6 @@ export default function GoalsPage() {
           </div>
         ) : (
           <div className="space-y-4">
-            {/* Active goals */}
             {activeGoals.length > 0 && (
               <div className="space-y-3">
                 {activeGoals.map((goal) => {
@@ -97,7 +132,7 @@ export default function GoalsPage() {
                       key={goal.id}
                       goal={goal}
                       linkedHabits={linkedHabitNames}
-                      onComplete={() => handleComplete(goal.id)}
+                      onToggleComplete={() => handleToggleComplete(goal.id)}
                       onDelete={() => handleDelete(goal.id)}
                       onEdit={() => setEditingGoal(goal)}
                     />
@@ -106,7 +141,6 @@ export default function GoalsPage() {
               </div>
             )}
 
-            {/* Completed goals */}
             {completedGoals.length > 0 && (
               <div>
                 <h2 className="text-sm font-semibold text-gray-400 uppercase tracking-wide mb-3 mt-4">
@@ -117,7 +151,7 @@ export default function GoalsPage() {
                     <GoalCard
                       key={goal.id}
                       goal={goal}
-                      onComplete={() => {}}
+                      onToggleComplete={() => handleToggleComplete(goal.id)}
                       onDelete={() => handleDelete(goal.id)}
                     />
                   ))}

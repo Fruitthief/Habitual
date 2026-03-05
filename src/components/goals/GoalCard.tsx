@@ -1,24 +1,24 @@
+import { useState } from 'react'
 import type { Goal } from '@/types/database'
 import { daysUntil, formatShortDate } from '@/lib/dates'
-import { Button } from '@/components/ui/Button'
 import { haptic } from '@/lib/haptics'
 
 interface GoalCardProps {
   goal: Goal
-  linkedHabits?: string[] // habit names
-  onComplete: () => void
+  linkedHabits?: string[]
+  onToggleComplete: () => void
   onDelete: () => void
   onEdit?: () => void
 }
 
-export function GoalCard({ goal, linkedHabits = [], onComplete, onDelete, onEdit }: GoalCardProps) {
+export function GoalCard({ goal, linkedHabits = [], onToggleComplete, onDelete, onEdit }: GoalCardProps) {
+  const [expanded, setExpanded] = useState(false)
+
   const isCompleted = !!goal.completed_at
   const days = goal.target_date ? daysUntil(goal.target_date) : null
   const isOverdue = days !== null && days < 0 && !isCompleted
 
-  // Only show bar when both current and target are explicitly set
   const hasProgress = goal.target_value != null && goal.current_value != null
-
   let progressPct: number | null = null
   if (hasProgress) {
     const start = goal.start_value ?? 0
@@ -30,13 +30,14 @@ export function GoalCard({ goal, linkedHabits = [], onComplete, onDelete, onEdit
 
   return (
     <div
-      className={`card border-l-4 space-y-2 animate-fade-in ${
+      className={`card border-l-4 space-y-2 animate-fade-in cursor-pointer select-none ${
         isCompleted
           ? 'border-l-green-400 opacity-70'
           : isOverdue
           ? 'border-l-red-400'
           : 'border-l-brand'
       }`}
+      onClick={() => setExpanded((e) => !e)}
     >
       {/* Title row */}
       <div className="flex items-start justify-between gap-2">
@@ -56,20 +57,16 @@ export function GoalCard({ goal, linkedHabits = [], onComplete, onDelete, onEdit
         <div className="flex items-center gap-1 flex-shrink-0">
           {onEdit && !isCompleted && (
             <button
-              onClick={() => { haptic('light'); onEdit() }}
+              onClick={(e) => { e.stopPropagation(); haptic('light'); onEdit() }}
               className="text-gray-400 hover:text-blue-500 transition-colors p-1"
               aria-label="Edit goal"
             >
               ✏️
             </button>
           )}
-          <button
-            onClick={() => { haptic('light'); onDelete() }}
-            className="text-gray-300 hover:text-red-400 transition-colors p-1"
-            aria-label="Delete goal"
-          >
-            ✕
-          </button>
+          <span className={`text-gray-300 text-xs transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}>
+            ▾
+          </span>
         </div>
       </div>
 
@@ -129,16 +126,26 @@ export function GoalCard({ goal, linkedHabits = [], onComplete, onDelete, onEdit
         </div>
       )}
 
-      {/* Complete button */}
-      {!isCompleted && (
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => { haptic('success'); onComplete() }}
-          className="!w-auto text-xs mt-1"
-        >
-          Mark Complete ✓
-        </Button>
+      {/* Expanded actions */}
+      {expanded && (
+        <div className="pt-1 space-y-2 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
+          <button
+            onClick={() => { haptic('medium'); onToggleComplete() }}
+            className={`w-full py-2 rounded-xl text-sm font-semibold transition-colors ${
+              isCompleted
+                ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-brand-pale text-brand hover:bg-brand-light'
+            }`}
+          >
+            {isCompleted ? '↩ Mark Active' : '✓ Mark Complete'}
+          </button>
+          <button
+            onClick={() => { haptic('medium'); onDelete() }}
+            className="w-full py-2 rounded-xl text-sm font-semibold bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
+          >
+            Delete Goal
+          </button>
+        </div>
       )}
     </div>
   )

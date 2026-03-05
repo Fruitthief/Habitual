@@ -12,6 +12,7 @@ interface GoalState {
   updateGoal: (id: string, updates: Partial<Pick<Goal, 'title' | 'description' | 'target_date' | 'start_value' | 'current_value' | 'target_value' | 'value_unit'>>) => Promise<void>
   updateGoalProgress: (id: string, currentValue: number) => Promise<void>
   completeGoal: (id: string) => Promise<void>
+  uncompleteGoal: (id: string) => Promise<void>
   deleteGoal: (id: string) => Promise<void>
   getHabitsForGoal: (goalId: string) => string[]
   reset: () => void
@@ -85,6 +86,15 @@ export const useGoalStore = create<GoalState>((set, get) => ({
     if (!error) {
       set((state) => ({
         goals: state.goals.map((g) => (g.id === id ? { ...g, completed_at: completedAt } : g)),
+      }))
+    }
+  },
+
+  uncompleteGoal: async (id) => {
+    const { error } = await supabase.from('goals').update({ completed_at: null }).eq('id', id)
+    if (!error) {
+      set((state) => ({
+        goals: state.goals.map((g) => (g.id === id ? { ...g, completed_at: null } : g)),
       }))
     }
   },
