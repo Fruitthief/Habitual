@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import type { Goal, Habit, NewGoal } from '@/types/database'
+import type { Goal, NewGoal } from '@/types/database'
 import { Modal } from '@/components/ui/Modal'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
@@ -8,11 +8,9 @@ import { todayStr } from '@/lib/dates'
 interface GoalFormProps {
   open: boolean
   onClose: () => void
-  onSubmit: (goal: NewGoal, habitIds: string[]) => Promise<void>
-  onUpdate?: (id: string, updates: Partial<Goal>, habitIds: string[]) => Promise<void>
+  onSubmit: (goal: NewGoal) => Promise<void>
+  onUpdate?: (id: string, updates: Partial<Goal>) => Promise<void>
   initialValues?: Goal
-  initialHabitIds?: string[]
-  habits?: Habit[]
 }
 
 export function GoalForm({
@@ -21,8 +19,6 @@ export function GoalForm({
   onSubmit,
   onUpdate,
   initialValues,
-  initialHabitIds = [],
-  habits = [],
 }: GoalFormProps) {
   const isEdit = !!initialValues?.id
 
@@ -33,7 +29,6 @@ export function GoalForm({
   const [startValue, setStartValue] = useState('')
   const [currentValue, setCurrentValue] = useState('')
   const [targetValue, setTargetValue] = useState('')
-  const [selectedHabits, setSelectedHabits] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -46,20 +41,10 @@ export function GoalForm({
       setStartValue(initialValues?.start_value != null ? String(initialValues.start_value) : '')
       setCurrentValue(initialValues?.current_value != null ? String(initialValues.current_value) : '')
       setTargetValue(initialValues?.target_value != null ? String(initialValues.target_value) : '')
-      setSelectedHabits(initialHabitIds)
       setError('')
     }
-    // Only re-init when the modal opens/closes — NOT on every prop update.
-    // Including initialValues/initialHabitIds would reset the form on every keystroke
-    // because the default [] parameter creates a new reference on each render.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open])
-
-  function toggleHabit(id: string) {
-    setSelectedHabits((prev) =>
-      prev.includes(id) ? prev.filter((h) => h !== id) : [...prev, id],
-    )
-  }
 
   function parseNum(s: string): number | null {
     return s.trim() !== '' ? parseFloat(s) : null
@@ -85,9 +70,9 @@ export function GoalForm({
       }
 
       if (isEdit && onUpdate && initialValues) {
-        await onUpdate(initialValues.id, goalData, selectedHabits)
+        await onUpdate(initialValues.id, goalData)
       } else {
-        await onSubmit(goalData, selectedHabits)
+        await onSubmit(goalData)
       }
       onClose()
     } catch (err) {
@@ -180,34 +165,6 @@ export function GoalForm({
             </div>
           </div>
         </div>
-
-        {habits.length > 0 && (
-          <div>
-            <label className="text-sm font-medium text-gray-700 block mb-2">
-              Link habits (optional)
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {habits.map((habit) => (
-                <button
-                  key={habit.id}
-                  type="button"
-                  onClick={() => toggleHabit(habit.id)}
-                  className={`
-                    flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm border transition-all
-                    ${
-                      selectedHabits.includes(habit.id)
-                        ? 'bg-brand-light border-brand text-brand'
-                        : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
-                    }
-                  `}
-                >
-                  <span>{habit.emoji}</span>
-                  <span>{habit.name}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </form>
     </Modal>
   )

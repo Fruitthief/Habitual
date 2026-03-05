@@ -11,6 +11,7 @@ import { HabitCard } from '@/components/habits/HabitCard'
 import { CelebrationBanner } from '@/components/home/CelebrationBanner'
 import { HabitCardSkeleton } from '@/components/ui/Skeleton'
 import { BottomNav } from '@/components/layout/BottomNav'
+import { HelpOverlay } from '@/components/ui/HelpOverlay'
 
 export default function HomePage() {
   const navigate = useNavigate()
@@ -24,6 +25,7 @@ export default function HomePage() {
   const [showCelebration, setShowCelebration] = useState(false)
   const [prevDone, setPrevDone] = useState(0)
   const [coinChoiceHabitId, setCoinChoiceHabitId] = useState<string | null>(null)
+  const [showHelp, setShowHelp] = useState(false)
   const isToday = viewDate === todayStr()
 
   useEffect(() => {
@@ -122,28 +124,33 @@ export default function HomePage() {
         <div className="flex items-center justify-between mb-6">
           <button
             onClick={goToPrevDay}
-            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-brand-pale active:scale-90 transition-all text-brand"
+            className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-brand-pale active:scale-90 transition-all text-brand text-2xl font-light"
             aria-label="Previous day"
           >
             ‹
           </button>
           <div className="text-center">
             <h1 className="font-display text-2xl font-bold text-brand-dark">{dateLabel}</h1>
-            {!isToday && (
-              <p className="text-xs text-gray-400 mt-0.5">{fullDate}</p>
-            )}
-            {isToday && (
-              <p className="text-xs text-gray-400 mt-0.5">{fullDate}</p>
-            )}
+            <p className="text-xs text-gray-400 mt-0.5">{fullDate}</p>
           </div>
-          <button
-            onClick={goToNextDay}
-            disabled={isToday}
-            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-brand-pale active:scale-90 transition-all text-brand disabled:text-gray-300 disabled:cursor-not-allowed"
-            aria-label="Next day"
-          >
-            ›
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={goToNextDay}
+              disabled={isToday}
+              className="w-11 h-11 flex items-center justify-center rounded-full hover:bg-brand-pale active:scale-90 transition-all text-brand text-2xl font-light disabled:text-gray-300 disabled:cursor-not-allowed"
+              aria-label="Next day"
+            >
+              ›
+            </button>
+            <button
+              onClick={() => setShowHelp(true)}
+              className="w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold transition-all active:scale-90"
+              style={{ backgroundColor: '#1e1e1e', color: '#6b7280' }}
+              aria-label="Help"
+            >
+              ?
+            </button>
+          </div>
         </div>
 
         {/* Progress bar */}
@@ -269,6 +276,8 @@ export default function HomePage() {
         show={showCelebration}
         onDismiss={() => setShowCelebration(false)}
       />
+
+      <HelpOverlay open={showHelp} onClose={() => setShowHelp(false)} />
 
       {/* Coin choice modal */}
       {coinChoiceHabitId && (

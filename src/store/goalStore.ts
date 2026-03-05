@@ -1,51 +1,38 @@
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase'
-import type { Goal, GoalHabit, NewGoal } from '@/types/database'
+import type { Goal, NewGoal } from '@/types/database'
 
 interface GoalState {
   goals: Goal[]
-  goalHabits: GoalHabit[]
   loading: boolean
 
   loadGoals: (userId: string) => Promise<void>
-  addGoal: (userId: string, goal: NewGoal, habitIds?: string[]) => Promise<void>
+  addGoal: (userId: string, goal: NewGoal) => Promise<void>
   updateGoal: (id: string, updates: Partial<Pick<Goal, 'title' | 'description' | 'target_date' | 'start_value' | 'current_value' | 'target_value' | 'value_unit'>>) => Promise<void>
   updateGoalProgress: (id: string, currentValue: number) => Promise<void>
   completeGoal: (id: string) => Promise<void>
   uncompleteGoal: (id: string) => Promise<void>
   deleteGoal: (id: string) => Promise<void>
-  getHabitsForGoal: (goalId: string) => string[]
   resetGoalProgress: (userId: string) => Promise<void>
   reset: () => void
 }
 
-export const useGoalStore = create<GoalState>((set, get) => ({
+export const useGoalStore = create<GoalState>((set) => ({
   goals: [],
-  goalHabits: [],
   loading: false,
 
   loadGoals: async (userId) => {
     set({ loading: true })
-    const [{ data: goals }] = await Promise.all([
-      supabase.from('goals').select('*').eq('user_id', userId).order('created_at', { ascending: false }),
-    ])
-
-    // Load goal_habits separately
-    const { data: gh } = await supabase
-      .from('goal_habits')
+    const { data: goals } = await supabase
+      .from('goals')
       .select('*')
-      .in('goal_id', (goals ?? []).map((g: Goal) => g.id))
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
 
-    set({
-      goals: (goals as Goal[]) ?? [],
-      goalHabits: (gh as GoalHabit[]) ?? [],
-      loading: false,
-    })
+    set({ goals: (goals as Goal[]) ?? [], loading: false })
   },
 
-  addGoal: async (userId, goal, habitIds = []) => {
-    // Build payload — omit null/undefined progress fields so the insert
-    // succeeds even if the DB migration for those columns hasn't been run yet.
+  addGoal: async (userId, goal) => {
     const { start_value, current_value, target_value, value_unit, ...base } = goal
     const payload: Record<string, unknown> = { ...base, user_id: userId }
     if (start_value != null) payload.start_value = start_value
@@ -62,18 +49,9 @@ export const useGoalStore = create<GoalState>((set, get) => ({
     if (error || !data) throw new Error(error?.message ?? 'Failed to save goal')
     const newGoal = data as Goal
     set((state) => ({ goals: [newGoal, ...state.goals] }))
-
-    if (habitIds.length > 0) {
-      const links = habitIds.map((hid) => ({ goal_id: newGoal.id, habit_id: hid }))
-      const { data: ghData } = await supabase.from('goal_habits').insert(links).select()
-      if (ghData) {
-        set((state) => ({ goalHabits: [...state.goalHabits, ...(ghData as GoalHabit[])] }))
-      }
-    }
   },
 
   updateGoal: async (id, updates) => {
-    // Strip null progress fields in case migration hasn't been run
     const { start_value, current_value, target_value, value_unit, ...base } = updates as Record<string, unknown>
     const payload: Record<string, unknown> = { ...base }
     if (start_value != null) payload.start_value = start_value
@@ -117,18 +95,11 @@ export const useGoalStore = create<GoalState>((set, get) => ({
   },
 
   deleteGoal: async (id) => {
-    await supabase.from('goal_habits').delete().eq('goal_id', id)
+    // goal_habits cascade-deletes automatically via FK constraint
     const { error } = await supabase.from('goals').delete().eq('id', id)
     if (!error) {
-      set((state) => ({
-        goals: state.goals.filter((g) => g.id !== id),
-        goalHabits: state.goalHabits.filter((gh) => gh.goal_id !== id),
-      }))
+      set((state) => ({ goals: state.goals.filter((g) => g.id !== id) }))
     }
-  },
-
-  getHabitsForGoal: (goalId) => {
-    return get().goalHabits.filter((gh) => gh.goal_id === goalId).map((gh) => gh.habit_id)
   },
 
   resetGoalProgress: async (userId) => {
@@ -141,5 +112,5 @@ export const useGoalStore = create<GoalState>((set, get) => ({
     }))
   },
 
-  reset: () => set({ goals: [], goalHabits: [], loading: false }),
+  reset: () => set({ goals: [], loading: false }),
 }))

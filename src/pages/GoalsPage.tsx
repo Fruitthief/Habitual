@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useAuthStore } from '@/store/authStore'
 import { useGoalStore } from '@/store/goalStore'
-import { useHabitStore } from '@/store/habitStore'
 import { useUIStore } from '@/store/uiStore'
 import type { Goal, NewGoal } from '@/types/database'
 import { GoalCard } from '@/components/goals/GoalCard'
@@ -11,9 +10,8 @@ import { BottomNav } from '@/components/layout/BottomNav'
 
 export default function GoalsPage() {
   const { user } = useAuthStore()
-  const { goals, loading, loadGoals, addGoal, updateGoal, completeGoal, uncompleteGoal, deleteGoal, getHabitsForGoal } =
+  const { goals, loading, loadGoals, addGoal, updateGoal, completeGoal, uncompleteGoal, deleteGoal } =
     useGoalStore()
-  const { habits, loadHabits } = useHabitStore()
   const { addToast } = useUIStore()
   const [showAdd, setShowAdd] = useState(false)
   const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
@@ -25,17 +23,16 @@ export default function GoalsPage() {
   useEffect(() => {
     if (user) {
       loadGoals(user.id)
-      if (habits.length === 0) loadHabits(user.id)
     }
   }, [user])
 
-  async function handleAdd(goal: NewGoal, habitIds: string[]) {
+  async function handleAdd(goal: NewGoal) {
     if (!user) return
-    await addGoal(user.id, goal, habitIds)  // throws on failure
+    await addGoal(user.id, goal)  // throws on failure
     addToast('Goal added! 🎯', 'success')
   }
 
-  async function handleUpdate(id: string, updates: Partial<Goal>, _habitIds: string[]) {
+  async function handleUpdate(id: string, updates: Partial<Goal>) {
     await updateGoal(id, updates)  // throws on failure
     addToast('Goal updated ✓', 'success')
   }
@@ -122,22 +119,15 @@ export default function GoalsPage() {
           <div className="space-y-4">
             {activeGoals.length > 0 && (
               <div className="space-y-3">
-                {activeGoals.map((goal) => {
-                  const linkedHabitIds = getHabitsForGoal(goal.id)
-                  const linkedHabitNames = habits
-                    .filter((h) => linkedHabitIds.includes(h.id))
-                    .map((h) => `${h.emoji} ${h.name}`)
-                  return (
-                    <GoalCard
-                      key={goal.id}
-                      goal={goal}
-                      linkedHabits={linkedHabitNames}
-                      onToggleComplete={() => handleToggleComplete(goal.id)}
-                      onDelete={() => handleDelete(goal.id)}
-                      onEdit={() => setEditingGoal(goal)}
-                    />
-                  )
-                })}
+                {activeGoals.map((goal) => (
+                  <GoalCard
+                    key={goal.id}
+                    goal={goal}
+                    onToggleComplete={() => handleToggleComplete(goal.id)}
+                    onDelete={() => handleDelete(goal.id)}
+                    onEdit={() => setEditingGoal(goal)}
+                  />
+                ))}
               </div>
             )}
 
@@ -177,7 +167,6 @@ export default function GoalsPage() {
         open={showAdd}
         onClose={() => setShowAdd(false)}
         onSubmit={handleAdd}
-        habits={habits}
       />
 
       {editingGoal && (
@@ -187,8 +176,6 @@ export default function GoalsPage() {
           onSubmit={handleAdd}
           onUpdate={handleUpdate}
           initialValues={editingGoal}
-          initialHabitIds={getHabitsForGoal(editingGoal.id)}
-          habits={habits}
         />
       )}
     </>

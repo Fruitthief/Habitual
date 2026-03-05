@@ -5,13 +5,12 @@ import { haptic } from '@/lib/haptics'
 
 interface GoalCardProps {
   goal: Goal
-  linkedHabits?: string[]
   onToggleComplete: () => void
   onDelete: () => void
   onEdit?: () => void
 }
 
-export function GoalCard({ goal, linkedHabits = [], onToggleComplete, onDelete, onEdit }: GoalCardProps) {
+export function GoalCard({ goal, onToggleComplete, onDelete, onEdit }: GoalCardProps) {
   const [expanded, setExpanded] = useState(false)
 
   const isCompleted = !!goal.completed_at
@@ -109,20 +108,6 @@ export function GoalCard({ goal, linkedHabits = [], onToggleComplete, onDelete, 
               ? 'Due today!'
               : `${days} day${days !== 1 ? 's' : ''} left • ${formatShortDate(goal.target_date)}`}
           </span>
-        </div>
-      )}
-
-      {/* Linked habits */}
-      {linkedHabits.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {linkedHabits.map((name) => (
-            <span
-              key={name}
-              className="text-xs bg-brand-pale text-brand px-2 py-0.5 rounded-full"
-            >
-              {name}
-            </span>
-          ))}
         </div>
       )}
 
