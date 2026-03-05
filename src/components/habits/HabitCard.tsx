@@ -8,7 +8,7 @@ interface HabitCardProps {
   streak: StreakInfo
   completed: boolean
   onToggle: () => void
-  onCheatDay?: () => void
+  onRequestComplete?: () => void
   onEdit?: () => void
   onArchive?: () => void
   viewOnly?: boolean
@@ -20,7 +20,7 @@ export function HabitCard({
   streak,
   completed,
   onToggle,
-  onCheatDay,
+  onRequestComplete,
   onEdit,
   onArchive,
   viewOnly = false,
@@ -56,16 +56,16 @@ export function HabitCard({
 
   function handleTouchEnd() {
     if (swipeX < -60) triggerToggle()
-    else if (swipeX > 60 && !completed && onCheatDay) {
-      haptic('medium')
-      onCheatDay()
-    }
     setSwipeX(0)
   }
 
   function handleCardClick() {
     if (didSwipe.current) return
-    triggerToggle()
+    if (!completed && onRequestComplete) {
+      onRequestComplete()
+    } else {
+      triggerToggle()
+    }
   }
 
   const streakLabel = streak.current > 0 ? `🔥 ${streak.current}` : null
@@ -113,12 +113,9 @@ export function HabitCard({
   return (
     <div className="relative overflow-hidden rounded-2xl" style={{ touchAction: 'pan-y' }}>
       {/* Swipe hint background */}
-      <div className="absolute inset-0 rounded-2xl flex items-center justify-between px-5">
+      <div className="absolute inset-0 rounded-2xl flex items-center px-5">
         <span className={`text-xl transition-opacity duration-100 ${swipeX < -20 ? 'opacity-100' : 'opacity-0'} ${!completed ? 'text-green-500' : 'text-gray-400'}`}>
           {!completed ? '✓' : '↩'}
-        </span>
-        <span className={`text-xl transition-opacity duration-100 ${swipeX > 20 && !completed && onCheatDay ? 'opacity-100' : 'opacity-0'}`}>
-          🪙
         </span>
       </div>
 
@@ -146,11 +143,6 @@ export function HabitCard({
             </p>
           )}
         </div>
-
-        {/* Coin indicator — always visible per habit */}
-        <span className={`text-xs font-medium flex-shrink-0 ${streak.cheatCoins > 0 ? 'text-amber-500' : 'text-gray-400'}`}>
-          🪙 {streak.cheatCoins}/2
-        </span>
 
         {/* Completion circle */}
         <div

@@ -54,7 +54,12 @@ export interface StreakInfo {
   current: number
   longest: number
   total: number
-  cheatCoins: number
+}
+
+export interface GlobalCoinInfo {
+  coinsAvailable: number
+  dailyStreak: number
+  daysInCurrentBlock: number
 }
 
 export type DayCompletionStatus = 'complete' | 'partial' | 'empty' | 'future' | 'no-habits'

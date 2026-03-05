@@ -4,7 +4,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useHabitStore } from '@/store/habitStore'
 import { useGoalStore } from '@/store/goalStore'
 import { useUIStore } from '@/store/uiStore'
-import { calculateStreak } from '@/lib/streak'
+import { calculateStreak, calculateGlobalCoins } from '@/lib/streak'
 import { todayStr, dateToStr, addDays, formatDisplayDate } from '@/lib/dates'
 import { haptic } from '@/lib/haptics'
 import { HabitCard } from '@/components/habits/HabitCard'
@@ -23,6 +23,7 @@ export default function HomePage() {
   const [viewDate, setViewDate] = useState(todayStr())
   const [showCelebration, setShowCelebration] = useState(false)
   const [prevDone, setPrevDone] = useState(0)
+  const [coinChoiceHabitId, setCoinChoiceHabitId] = useState<string | null>(null)
   const isToday = viewDate === todayStr()
 
   useEffect(() => {
@@ -66,6 +67,7 @@ export default function HomePage() {
   async function handleCheatDay(habitId: string) {
     if (!user) return
     await useCheatDay(user.id, habitId)
+    setCoinChoiceHabitId(null)
     addToast('Cheat coin used 🪙 — streak protected!', 'success')
   }
 
@@ -80,6 +82,14 @@ export default function HomePage() {
     const next = dateToStr(addDays(new Date(viewDate + 'T00:00:00'), 1))
     if (next <= todayStr()) setViewDate(next)
   }
+
+  // --- Global cheat coins ---
+  const globalCoins = useMemo(
+    () => calculateGlobalCoins(habits.map((h) => h.id), completions, user?.created_at ?? new Date().toISOString()),
+    [habits, completions, user],
+  )
+  const { coinsAvailable, daysInCurrentBlock } = globalCoins
+  const daysToNextCoin = 6 - daysInCurrentBlock
 
   // --- Goals summary ---
   const activeGoals = useMemo(() => goals.filter((g) => !g.completed_at), [goals])
@@ -159,6 +169,31 @@ export default function HomePage() {
           </div>
         )}
 
+        {/* Cheat coin status */}
+        {isToday && habits.length > 0 && !loading && (
+          <div className="card mb-4 flex items-center gap-3">
+            <span className="text-xl flex-shrink-0">🪙</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-medium text-gray-700">
+                  {coinsAvailable} coin{coinsAvailable !== 1 ? 's' : ''} available
+                </span>
+                {coinsAvailable < 8 ? (
+                  <span className="text-xs text-gray-400">{daysToNextCoin} day{daysToNextCoin !== 1 ? 's' : ''} to next</span>
+                ) : (
+                  <span className="text-xs text-amber-500 font-medium">Max reached!</span>
+                )}
+              </div>
+              <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${(daysInCurrentBlock / 6) * 100}%`, backgroundColor: '#f59e0b' }}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Habits list */}
         <div className="space-y-3">
           {loading ? (
@@ -194,7 +229,7 @@ export default function HomePage() {
                     streak={streak}
                     completed={completed}
                     onToggle={() => handleToggle(habit.id)}
-                    onCheatDay={isToday && streak.cheatCoins > 0 ? () => handleCheatDay(habit.id) : undefined}
+                    onRequestComplete={isToday && coinsAvailable > 0 ? () => setCoinChoiceHabitId(habit.id) : undefined}
                     viewOnly={!isToday}
                     date={viewDate}
                   />
@@ -234,6 +269,37 @@ export default function HomePage() {
         show={showCelebration}
         onDismiss={() => setShowCelebration(false)}
       />
+
+      {/* Coin choice modal */}
+      {coinChoiceHabitId && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setCoinChoiceHabitId(null)} />
+          <div className="relative w-full max-w-md px-4 pb-8 animate-slide-up">
+            <div className="rounded-2xl p-5 space-y-3" style={{ backgroundColor: '#111111', border: '1px solid #1e1e1e' }}>
+              <p className="text-center text-sm font-semibold text-gray-400 uppercase tracking-wide">Complete habit?</p>
+              <button
+                onClick={() => { handleToggle(coinChoiceHabitId); setCoinChoiceHabitId(null) }}
+                className="w-full py-3 rounded-xl font-semibold text-sm bg-brand text-black active:scale-95 transition-all"
+              >
+                ✓ Mark Done
+              </button>
+              <button
+                onClick={() => handleCheatDay(coinChoiceHabitId)}
+                className="w-full py-3 rounded-xl font-semibold text-sm active:scale-95 transition-all"
+                style={{ backgroundColor: '#1a1200', border: '1px solid #3a2800', color: '#f59e0b' }}
+              >
+                🪙 Use Cheat Coin ({coinsAvailable} left)
+              </button>
+              <button
+                onClick={() => setCoinChoiceHabitId(null)}
+                className="w-full py-2 text-sm text-gray-500"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

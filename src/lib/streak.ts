@@ -1,4 +1,4 @@
-import type { HabitCompletion, StreakInfo } from '@/types/database'
+import type { HabitCompletion, StreakInfo, GlobalCoinInfo } from '@/types/database'
 import { dateToStr, strToDate, addDays, extractDatePart } from './dates'
 
 /**
@@ -23,7 +23,6 @@ export function calculateStreak(
   const startDate = strToDate(startStr)
 
   const completionSet = new Set(completions.map((c) => c.completed_date))
-  const cheatDaySet = new Set(completions.filter((c) => c.is_cheat_day).map((c) => c.completed_date))
 
   // --- Longest streak (scan all days) ---
   let longestStreak = 0
@@ -59,28 +58,9 @@ export function calculateStreak(
     }
   }
 
-  // --- Cheat coins ---
-  const todayCompleted = completionSet.has(today)
-
-  // Count cheat days used within the current streak window
-  let cheatDaysUsedInCurrentStreak = 0
-  if (currentStreak > 0) {
-    const streakEndDate = todayCompleted ? new Date(todayDate) : addDays(todayDate, -1)
-    for (let i = 0; i < currentStreak; i++) {
-      const d = dateToStr(addDays(streakEndDate, -i))
-      if (cheatDaySet.has(d)) cheatDaysUsedInCurrentStreak++
-    }
-  }
-
-  // 1 coin per 6-day streak, max 2, minus cheat days already used in current streak
-  const cheatCoins = Math.max(
-    0,
-    Math.min(2, Math.floor(currentStreak / 6)) - cheatDaysUsedInCurrentStreak,
-  )
-
   const total = completions.filter((c) => !c.is_cheat_day).length
 
-  return { current: currentStreak, longest: longestStreak, total, cheatCoins }
+  return { current: currentStreak, longest: longestStreak, total }
 }
 
 /** Get streak milestone label for fire animation (7, 14, 21, 30, 60, 100, ...) */
@@ -88,6 +68,64 @@ export function getStreakMilestone(streak: number): string | null {
   const milestones = [7, 14, 21, 30, 60, 100, 200, 365]
   if (milestones.includes(streak)) return `🔥 ${streak}-day streak!`
   return null
+}
+
+/**
+ * Calculate global cheat coin state.
+ * Coins are earned by completing ALL habits for 6 consecutive days (2 coins per block, max 8).
+ * Coins are spent globally (any cheat-day completion within the streak window).
+ */
+export function calculateGlobalCoins(
+  habitIds: string[],
+  completions: Pick<HabitCompletion, 'habit_id' | 'completed_date' | 'is_cheat_day'>[],
+  accountCreatedAt: string,
+): GlobalCoinInfo {
+  if (habitIds.length === 0) return { coinsAvailable: 0, dailyStreak: 0, daysInCurrentBlock: 0 }
+
+  const todayDate = new Date()
+  todayDate.setHours(0, 0, 0, 0)
+  const today = dateToStr(todayDate)
+  const accountStart = strToDate(extractDatePart(accountCreatedAt))
+
+  // date → set of habit IDs that have any completion (regular or cheat)
+  const byDate = new Map<string, Set<string>>()
+  for (const c of completions) {
+    if (!byDate.has(c.completed_date)) byDate.set(c.completed_date, new Set())
+    byDate.get(c.completed_date)!.add(c.habit_id)
+  }
+
+  const isPerfectDay = (ds: string) => (byDate.get(ds)?.size ?? 0) >= habitIds.length
+
+  // Current daily streak (consecutive perfect days ending today or yesterday)
+  let checkDate = isPerfectDay(today) ? new Date(todayDate) : addDays(todayDate, -1)
+  let dailyStreak = 0
+  while (checkDate >= accountStart) {
+    const ds = dateToStr(checkDate)
+    if (isPerfectDay(ds)) { dailyStreak++; checkDate = addDays(checkDate, -1) }
+    else break
+  }
+
+  // 2 coins per 6-day block, max 8
+  const coinsEarned = Math.min(8, Math.floor(dailyStreak / 6) * 2)
+  const daysInCurrentBlock = dailyStreak % 6
+
+  // Cheat days used within the current streak window
+  let cheatDaysUsed = 0
+  if (dailyStreak > 0) {
+    const streakEnd = isPerfectDay(today) ? new Date(todayDate) : addDays(todayDate, -1)
+    for (let i = 0; i < dailyStreak; i++) {
+      const ds = dateToStr(addDays(streakEnd, -i))
+      for (const c of completions) {
+        if (c.completed_date === ds && c.is_cheat_day) cheatDaysUsed++
+      }
+    }
+  }
+
+  return {
+    coinsAvailable: Math.max(0, coinsEarned - cheatDaysUsed),
+    dailyStreak,
+    daysInCurrentBlock,
+  }
 }
 
 /** Calculate total "all-time longest streak" across all habits */
