@@ -21,7 +21,7 @@ export function Button({
     'inline-flex items-center justify-center font-semibold rounded-xl transition-all duration-150 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100'
 
   const variants = {
-    primary: 'bg-brand text-white hover:bg-brand-dark',
+    primary: 'bg-brand text-black hover:bg-brand-dark',
     secondary: 'bg-brand-light text-brand hover:bg-brand-pale',
     ghost: 'text-brand hover:bg-brand-pale',
     danger: 'bg-red-50 text-red-600 hover:bg-red-100',

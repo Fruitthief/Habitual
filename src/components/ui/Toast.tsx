@@ -13,7 +13,7 @@ export function Toast() {
           className={`
             flex items-center gap-3 px-4 py-3 rounded-xl shadow-lg
             animate-slide-down text-sm font-medium
-            ${toast.type === 'success' ? 'bg-brand text-white' : ''}
+            ${toast.type === 'success' ? 'bg-brand text-black' : ''}
             ${toast.type === 'error' ? 'bg-red-500 text-white' : ''}
             ${toast.type === 'info' ? 'bg-gray-800 text-white' : ''}
           `}
