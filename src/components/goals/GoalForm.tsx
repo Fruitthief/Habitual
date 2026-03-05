@@ -90,6 +90,8 @@ export function GoalForm({
         await onSubmit(goalData, selectedHabits)
       }
       onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to save goal — please try again')
     } finally {
       setLoading(false)
     }

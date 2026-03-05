@@ -59,7 +59,7 @@ export const useGoalStore = create<GoalState>((set, get) => ({
       .select()
       .single()
 
-    if (error || !data) return
+    if (error || !data) throw new Error(error?.message ?? 'Failed to save goal')
     const newGoal = data as Goal
     set((state) => ({ goals: [newGoal, ...state.goals] }))
 
@@ -73,7 +73,15 @@ export const useGoalStore = create<GoalState>((set, get) => ({
   },
 
   updateGoal: async (id, updates) => {
-    const { error } = await supabase.from('goals').update(updates).eq('id', id)
+    // Strip null progress fields in case migration hasn't been run
+    const { start_value, current_value, target_value, value_unit, ...base } = updates as Record<string, unknown>
+    const payload: Record<string, unknown> = { ...base }
+    if (start_value != null) payload.start_value = start_value
+    if (current_value != null) payload.current_value = current_value
+    if (target_value != null) payload.target_value = target_value
+    if (value_unit != null) payload.value_unit = value_unit
+
+    const { error } = await supabase.from('goals').update(payload).eq('id', id)
     if (!error) {
       set((state) => ({
         goals: state.goals.map((g) => (g.id === id ? { ...g, ...updates } : g)),

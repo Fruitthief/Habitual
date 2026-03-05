@@ -31,7 +31,7 @@ export default function GoalsPage() {
 
   async function handleAdd(goal: NewGoal, habitIds: string[]) {
     if (!user) return
-    await addGoal(user.id, goal, habitIds)
+    await addGoal(user.id, goal, habitIds)  // throws on failure
     addToast('Goal added! 🎯', 'success')
   }
 
