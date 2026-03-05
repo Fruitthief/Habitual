@@ -85,11 +85,13 @@ export default function HomePage() {
   const activeGoals = useMemo(() => goals.filter((g) => !g.completed_at), [goals])
   const goalsSummary = useMemo(() => {
     if (activeGoals.length === 0) return null
-    const withProgress = activeGoals.filter((g) => g.target_value != null && g.target_value > 0)
+    const withProgress = activeGoals.filter((g) => g.target_value != null && g.current_value != null)
     if (withProgress.length === 0) return `${activeGoals.length} active goal${activeGoals.length !== 1 ? 's' : ''}`
     const avgPct = Math.round(
       withProgress.reduce((sum, g) => {
-        const pct = Math.min(100, ((g.current_value ?? 0) / g.target_value!) * 100)
+        const start = g.start_value ?? 0
+        const range = g.target_value! - start
+        const pct = range === 0 ? 100 : Math.min(100, Math.max(0, ((g.current_value! - start) / range) * 100))
         return sum + pct
       }, 0) / withProgress.length,
     )
