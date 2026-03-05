@@ -104,12 +104,6 @@ export default function HabitsPage() {
           )}
         </div>
 
-        {/* Swipe hint */}
-        {habits.length > 0 && (
-          <p className="text-center text-xs text-gray-300 mt-6">
-            Swipe left on a habit to edit or archive
-          </p>
-        )}
       </div>
 
       <BottomNav />

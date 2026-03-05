@@ -27,12 +27,11 @@ export function HabitCard({
 }: HabitCardProps) {
   const [bouncing, setBouncing] = useState(false)
   const [swipeX, setSwipeX] = useState(0)
-  const [showActions, setShowActions] = useState(false)
   const touchStartX = useRef(0)
   const touchStartY = useRef(0)
+  const didSwipe = useRef(false)
 
-  function handleCheck() {
-    if (viewOnly) return
+  function triggerToggle() {
     haptic(completed ? 'light' : 'success')
     if (!completed) {
       setBouncing(true)
@@ -44,110 +43,107 @@ export function HabitCard({
   function handleTouchStart(e: React.TouchEvent) {
     touchStartX.current = e.touches[0].clientX
     touchStartY.current = e.touches[0].clientY
-    setShowActions(false)
+    didSwipe.current = false
   }
 
   function handleTouchMove(e: React.TouchEvent) {
     const dx = e.touches[0].clientX - touchStartX.current
     const dy = Math.abs(e.touches[0].clientY - touchStartY.current)
-    if (dy > 20) return // vertical scroll
-    if (dx < 0) {
-      setSwipeX(Math.max(dx, -80))
-    } else if (swipeX < 0) {
-      setSwipeX(Math.min(dx + swipeX, 0))
-    }
+    if (dy > 20) return
+    didSwipe.current = true
+    setSwipeX(Math.max(-90, Math.min(90, dx)))
   }
 
   function handleTouchEnd() {
-    if (swipeX < -50) {
-      setSwipeX(-72)
-      setShowActions(true)
-    } else {
-      setSwipeX(0)
-      setShowActions(false)
-    }
+    if (swipeX < -60 && !completed) triggerToggle()
+    else if (swipeX > 60 && completed) triggerToggle()
+    setSwipeX(0)
+  }
+
+  function handleCardClick() {
+    if (didSwipe.current) return
+    triggerToggle()
   }
 
   const streakLabel = streak.current > 0 ? `🔥 ${streak.current}` : null
   const isMilestone = [7, 14, 21, 30, 60, 100].includes(streak.current)
 
-  return (
-    <div className="relative overflow-hidden rounded-2xl" style={{ touchAction: 'pan-y' }}>
-      {/* Swipe-reveal action buttons */}
-      {(onEdit || onArchive) && (
-        <div
-          className="absolute right-0 top-0 bottom-0 flex items-center gap-2 px-3 bg-gray-100 rounded-r-2xl"
-          style={{ width: 72 }}
-        >
-          {onEdit && (
-            <button
-              onClick={() => { setSwipeX(0); setShowActions(false); onEdit() }}
-              className="text-blue-500 p-1.5 rounded-lg hover:bg-blue-50"
-              aria-label="Edit"
-            >
-              ✏️
-            </button>
-          )}
-          {onArchive && (
-            <button
-              onClick={() => { setSwipeX(0); setShowActions(false); onArchive() }}
-              className="text-red-400 p-1.5 rounded-lg hover:bg-red-50"
-              aria-label="Archive"
-            >
-              🗂️
-            </button>
+  // ── Management mode (Habits page): inline edit + delete buttons ──
+  if (viewOnly) {
+    return (
+      <div
+        className="card border-l-4 flex items-center gap-3"
+        style={{ borderLeftColor: habit.color }}
+      >
+        <span className="text-2xl flex-shrink-0 select-none">{habit.emoji}</span>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-[15px] truncate text-gray-900">{habit.name}</p>
+          {streakLabel && (
+            <p className={`text-xs mt-0.5 ${isMilestone ? 'animate-fire-pulse text-orange-500 font-semibold' : 'text-gray-400'}`}>
+              {streakLabel}
+            </p>
           )}
         </div>
-      )}
+        {onEdit && (
+          <button
+            onClick={onEdit}
+            className="text-blue-500 p-2 rounded-lg hover:bg-blue-50 flex-shrink-0 active:scale-90 transition-all"
+            aria-label="Edit"
+          >
+            ✏️
+          </button>
+        )}
+        {onArchive && (
+          <button
+            onClick={onArchive}
+            className="text-red-400 p-2 rounded-lg hover:bg-red-50 flex-shrink-0 active:scale-90 transition-all"
+            aria-label="Delete"
+          >
+            🗑️
+          </button>
+        )}
+      </div>
+    )
+  }
 
-      {/* Card body */}
+  // ── Interactive mode (Home page): swipe or tap to toggle ──
+  return (
+    <div className="relative overflow-hidden rounded-2xl" style={{ touchAction: 'pan-y' }}>
+      {/* Swipe hint background */}
+      <div className="absolute inset-0 rounded-2xl flex items-center justify-between px-5">
+        <span className={`text-green-500 text-xl transition-opacity duration-100 ${swipeX < -20 ? 'opacity-100' : 'opacity-0'}`}>✓</span>
+        <span className={`text-gray-400 text-xl transition-opacity duration-100 ${swipeX > 20 ? 'opacity-100' : 'opacity-0'}`}>↩</span>
+      </div>
+
       <div
-        className="card border-l-4 flex items-center gap-3 transition-transform duration-200 relative bg-white"
+        className="card border-l-4 flex items-center gap-3 relative bg-white cursor-pointer active:opacity-90"
         style={{
           borderLeftColor: habit.color,
           transform: `translateX(${swipeX}px)`,
+          transition: swipeX === 0 ? 'transform 0.2s ease' : 'none',
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onClick={() => {
-          if (showActions) {
-            setSwipeX(0)
-            setShowActions(false)
-          }
-        }}
+        onClick={handleCardClick}
       >
-        {/* Emoji */}
         <span className="text-2xl flex-shrink-0 select-none">{habit.emoji}</span>
 
-        {/* Name + streak */}
         <div className="flex-1 min-w-0">
-          <p
-            className={`font-medium text-[15px] truncate transition-all ${
-              !viewOnly && completed ? 'text-gray-400 line-through' : 'text-gray-900'
-            }`}
-          >
+          <p className={`font-medium text-[15px] truncate transition-all ${completed ? 'text-gray-400 line-through' : 'text-gray-900'}`}>
             {habit.name}
           </p>
           {streakLabel && (
-            <p
-              className={`text-xs mt-0.5 ${
-                isMilestone ? 'animate-fire-pulse text-orange-500 font-semibold' : 'text-gray-400'
-              }`}
-            >
+            <p className={`text-xs mt-0.5 ${isMilestone ? 'animate-fire-pulse text-orange-500 font-semibold' : 'text-gray-400'}`}>
               {streakLabel}
             </p>
           )}
         </div>
 
         {/* Cheat day */}
-        {!viewOnly && streak.cheatDayEligible && !completed && onCheatDay && (
+        {streak.cheatDayEligible && !completed && onCheatDay && (
           <button
-            onClick={(e) => {
-              e.stopPropagation()
-              haptic('medium')
-              onCheatDay()
-            }}
+            onClick={(e) => { e.stopPropagation(); haptic('medium'); onCheatDay() }}
             className="text-xs bg-amber-50 text-amber-600 px-2 py-1 rounded-lg border border-amber-200 flex-shrink-0 font-medium"
             title="Use cheat day — skips today without breaking your streak"
           >
@@ -155,29 +151,17 @@ export function HabitCard({
           </button>
         )}
 
-        {/* Checkbox */}
-        {!viewOnly && (
-          <button
-            onClick={(e) => { e.stopPropagation(); handleCheck() }}
-            aria-label={completed ? 'Mark incomplete' : 'Mark complete'}
-            className={`
-              w-7 h-7 rounded-full border-2 flex items-center justify-center
-              flex-shrink-0 transition-all duration-200
-              ${completed
-                ? 'border-transparent text-white'
-                : 'border-gray-300 bg-white hover:border-brand'
-              }
-              ${bouncing ? 'animate-spring-bounce' : ''}
-            `}
-            style={completed ? { backgroundColor: habit.color } : {}}
-          >
-            {completed && (
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            )}
-          </button>
-        )}
+        {/* Completion circle */}
+        <div
+          className={`w-7 h-7 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all duration-200 pointer-events-none ${bouncing ? 'animate-spring-bounce' : ''} ${completed ? 'border-transparent text-white' : 'border-gray-300'}`}
+          style={completed ? { backgroundColor: habit.color } : {}}
+        >
+          {completed && (
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          )}
+        </div>
       </div>
     </div>
   )
