@@ -36,7 +36,7 @@ export default function GoalsPage() {
   }
 
   async function handleUpdate(id: string, updates: Partial<Goal>, _habitIds: string[]) {
-    await updateGoal(id, updates)
+    await updateGoal(id, updates)  // throws on failure
     addToast('Goal updated ✓', 'success')
   }
 

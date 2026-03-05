@@ -82,11 +82,10 @@ export const useGoalStore = create<GoalState>((set, get) => ({
     if (value_unit != null) payload.value_unit = value_unit
 
     const { error } = await supabase.from('goals').update(payload).eq('id', id)
-    if (!error) {
-      set((state) => ({
-        goals: state.goals.map((g) => (g.id === id ? { ...g, ...updates } : g)),
-      }))
-    }
+    if (error) throw new Error(error.message)
+    set((state) => ({
+      goals: state.goals.map((g) => (g.id === id ? { ...g, ...updates } : g)),
+    }))
   },
 
   updateGoalProgress: async (id, currentValue) => {
