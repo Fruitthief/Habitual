@@ -147,12 +147,10 @@ export function HabitCard({
           )}
         </div>
 
-        {/* Coin indicator */}
-        {streak.cheatCoins > 0 && !completed && (
-          <span className="text-xs text-amber-600 font-medium flex-shrink-0">
-            🪙×{streak.cheatCoins}
-          </span>
-        )}
+        {/* Coin indicator — always visible per habit */}
+        <span className={`text-xs font-medium flex-shrink-0 ${streak.cheatCoins > 0 ? 'text-amber-500' : 'text-gray-400'}`}>
+          🪙 {streak.cheatCoins}/2
+        </span>
 
         {/* Completion circle */}
         <div
