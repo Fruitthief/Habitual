@@ -8,12 +8,18 @@ interface GoalCardProps {
   linkedHabits?: string[] // habit names
   onComplete: () => void
   onDelete: () => void
+  onEdit?: () => void
 }
 
-export function GoalCard({ goal, linkedHabits = [], onComplete, onDelete }: GoalCardProps) {
+export function GoalCard({ goal, linkedHabits = [], onComplete, onDelete, onEdit }: GoalCardProps) {
   const isCompleted = !!goal.completed_at
   const days = goal.target_date ? daysUntil(goal.target_date) : null
   const isOverdue = days !== null && days < 0 && !isCompleted
+
+  const hasProgress = goal.target_value != null && goal.target_value > 0
+  const progressPct = hasProgress
+    ? Math.min(100, Math.round(((goal.current_value ?? 0) / goal.target_value!) * 100))
+    : null
 
   return (
     <div
@@ -40,14 +46,46 @@ export function GoalCard({ goal, linkedHabits = [], onComplete, onDelete }: Goal
             <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{goal.description}</p>
           )}
         </div>
-        <button
-          onClick={() => { haptic('light'); onDelete() }}
-          className="text-gray-300 hover:text-red-400 transition-colors p-1 flex-shrink-0"
-          aria-label="Delete goal"
-        >
-          ✕
-        </button>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {onEdit && !isCompleted && (
+            <button
+              onClick={() => { haptic('light'); onEdit() }}
+              className="text-gray-400 hover:text-blue-500 transition-colors p-1"
+              aria-label="Edit goal"
+            >
+              ✏️
+            </button>
+          )}
+          <button
+            onClick={() => { haptic('light'); onDelete() }}
+            className="text-gray-300 hover:text-red-400 transition-colors p-1"
+            aria-label="Delete goal"
+          >
+            ✕
+          </button>
+        </div>
       </div>
+
+      {/* Progress bar */}
+      {hasProgress && (
+        <div>
+          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
+            <span>
+              {goal.current_value ?? 0} / {goal.target_value}{goal.value_unit ? ` ${goal.value_unit}` : ''}
+            </span>
+            <span className="font-medium text-brand">{progressPct}%</span>
+          </div>
+          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${progressPct}%`,
+                backgroundColor: progressPct === 100 ? '#22c55e' : '#2d5a27',
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Target date */}
       {goal.target_date && (

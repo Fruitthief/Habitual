@@ -3,7 +3,7 @@ import { useAuthStore } from '@/store/authStore'
 import { useGoalStore } from '@/store/goalStore'
 import { useHabitStore } from '@/store/habitStore'
 import { useUIStore } from '@/store/uiStore'
-import type { NewGoal } from '@/types/database'
+import type { Goal, NewGoal } from '@/types/database'
 import { GoalCard } from '@/components/goals/GoalCard'
 import { GoalForm } from '@/components/goals/GoalForm'
 import { GoalCardSkeleton } from '@/components/ui/Skeleton'
@@ -11,11 +11,12 @@ import { BottomNav } from '@/components/layout/BottomNav'
 
 export default function GoalsPage() {
   const { user } = useAuthStore()
-  const { goals, loading, loadGoals, addGoal, completeGoal, deleteGoal, getHabitsForGoal } =
+  const { goals, loading, loadGoals, addGoal, updateGoal, completeGoal, deleteGoal, getHabitsForGoal } =
     useGoalStore()
   const { habits, loadHabits } = useHabitStore()
   const { addToast } = useUIStore()
   const [showAdd, setShowAdd] = useState(false)
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null)
 
   useEffect(() => {
     if (user) {
@@ -28,6 +29,11 @@ export default function GoalsPage() {
     if (!user) return
     await addGoal(user.id, goal, habitIds)
     addToast('Goal added! 🎯', 'success')
+  }
+
+  async function handleUpdate(id: string, updates: Partial<Goal>, _habitIds: string[]) {
+    await updateGoal(id, updates)
+    addToast('Goal updated ✓', 'success')
   }
 
   async function handleComplete(id: string) {
@@ -93,6 +99,7 @@ export default function GoalsPage() {
                       linkedHabits={linkedHabitNames}
                       onComplete={() => handleComplete(goal.id)}
                       onDelete={() => handleDelete(goal.id)}
+                      onEdit={() => setEditingGoal(goal)}
                     />
                   )
                 })}
@@ -138,6 +145,18 @@ export default function GoalsPage() {
         onSubmit={handleAdd}
         habits={habits}
       />
+
+      {editingGoal && (
+        <GoalForm
+          open={true}
+          onClose={() => setEditingGoal(null)}
+          onSubmit={handleAdd}
+          onUpdate={handleUpdate}
+          initialValues={editingGoal}
+          initialHabitIds={getHabitsForGoal(editingGoal.id)}
+          habits={habits}
+        />
+      )}
     </>
   )
 }

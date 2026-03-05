@@ -59,26 +59,28 @@ export function calculateStreak(
     }
   }
 
-  // --- Cheat day eligibility ---
+  // --- Cheat coins ---
   const todayCompleted = completionSet.has(today)
-  let cheatDayEligible = false
 
-  if (!todayCompleted && currentStreak >= 7) {
-    // Check if a cheat day was already used in the last 7 days (rolling window)
-    let cheatUsedInWindow = false
-    for (let i = 1; i <= 7; i++) {
-      const dayStr = dateToStr(addDays(todayDate, -i))
-      if (cheatDaySet.has(dayStr)) {
-        cheatUsedInWindow = true
-        break
-      }
+  // Count cheat days used within the current streak window
+  let cheatDaysUsedInCurrentStreak = 0
+  if (currentStreak > 0) {
+    const streakEndDate = todayCompleted ? new Date(todayDate) : addDays(todayDate, -1)
+    for (let i = 0; i < currentStreak; i++) {
+      const d = dateToStr(addDays(streakEndDate, -i))
+      if (cheatDaySet.has(d)) cheatDaysUsedInCurrentStreak++
     }
-    cheatDayEligible = !cheatUsedInWindow
   }
+
+  // 1 coin per 6-day streak, max 2, minus cheat days already used in current streak
+  const cheatCoins = Math.max(
+    0,
+    Math.min(2, Math.floor(currentStreak / 6)) - cheatDaysUsedInCurrentStreak,
+  )
 
   const total = completions.filter((c) => !c.is_cheat_day).length
 
-  return { current: currentStreak, longest: longestStreak, total, cheatDayEligible }
+  return { current: currentStreak, longest: longestStreak, total, cheatCoins }
 }
 
 /** Get streak milestone label for fire animation (7, 14, 21, 30, 60, 100, ...) */

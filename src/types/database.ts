@@ -26,9 +26,16 @@ export interface Goal {
   target_date: string | null // YYYY-MM-DD
   completed_at: string | null
   created_at: string
+  current_value: number | null
+  target_value: number | null
+  value_unit: string | null
 }
 
-export type NewGoal = Pick<Goal, 'title' | 'description' | 'target_date'>
+export type NewGoal = Pick<Goal, 'title' | 'description' | 'target_date'> & {
+  current_value?: number | null
+  target_value?: number | null
+  value_unit?: string | null
+}
 
 export interface GoalHabit {
   goal_id: string
@@ -45,7 +52,7 @@ export interface StreakInfo {
   current: number
   longest: number
   total: number
-  cheatDayEligible: boolean
+  cheatCoins: number
 }
 
 export type DayCompletionStatus = 'complete' | 'partial' | 'empty' | 'future' | 'no-habits'

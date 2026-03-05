@@ -105,3 +105,11 @@ create policy "Users manage own settings"
   on user_settings for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- ─────────────────────────────────────────
+-- MIGRATION: Goal numeric progress tracking
+-- Run this if you already have the goals table
+-- ─────────────────────────────────────────
+alter table goals add column if not exists current_value numeric default null;
+alter table goals add column if not exists target_value  numeric default null;
+alter table goals add column if not exists value_unit    text    default null;

@@ -55,8 +55,11 @@ export function HabitCard({
   }
 
   function handleTouchEnd() {
-    if (swipeX < -60 && !completed) triggerToggle()
-    else if (swipeX > 60 && completed) triggerToggle()
+    if (swipeX < -60) triggerToggle()
+    else if (swipeX > 60 && !completed && onCheatDay) {
+      haptic('medium')
+      onCheatDay()
+    }
     setSwipeX(0)
   }
 
@@ -111,8 +114,12 @@ export function HabitCard({
     <div className="relative overflow-hidden rounded-2xl" style={{ touchAction: 'pan-y' }}>
       {/* Swipe hint background */}
       <div className="absolute inset-0 rounded-2xl flex items-center justify-between px-5">
-        <span className={`text-green-500 text-xl transition-opacity duration-100 ${swipeX < -20 ? 'opacity-100' : 'opacity-0'}`}>✓</span>
-        <span className={`text-gray-400 text-xl transition-opacity duration-100 ${swipeX > 20 ? 'opacity-100' : 'opacity-0'}`}>↩</span>
+        <span className={`text-xl transition-opacity duration-100 ${swipeX < -20 ? 'opacity-100' : 'opacity-0'} ${!completed ? 'text-green-500' : 'text-gray-400'}`}>
+          {!completed ? '✓' : '↩'}
+        </span>
+        <span className={`text-xl transition-opacity duration-100 ${swipeX > 20 && !completed && onCheatDay ? 'opacity-100' : 'opacity-0'}`}>
+          🪙
+        </span>
       </div>
 
       <div
@@ -140,15 +147,11 @@ export function HabitCard({
           )}
         </div>
 
-        {/* Cheat day */}
-        {streak.cheatDayEligible && !completed && onCheatDay && (
-          <button
-            onClick={(e) => { e.stopPropagation(); haptic('medium'); onCheatDay() }}
-            className="text-xs bg-amber-50 text-amber-600 px-2 py-1 rounded-lg border border-amber-200 flex-shrink-0 font-medium"
-            title="Use cheat day — skips today without breaking your streak"
-          >
-            🛡️
-          </button>
+        {/* Coin indicator */}
+        {streak.cheatCoins > 0 && !completed && (
+          <span className="text-xs text-amber-600 font-medium flex-shrink-0">
+            🪙×{streak.cheatCoins}
+          </span>
         )}
 
         {/* Completion circle */}

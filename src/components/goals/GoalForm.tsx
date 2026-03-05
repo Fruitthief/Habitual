@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import type { Habit, NewGoal } from '@/types/database'
+import { useState, useEffect } from 'react'
+import type { Goal, Habit, NewGoal } from '@/types/database'
 import { Modal } from '@/components/ui/Modal'
 import { Input, Textarea } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
@@ -9,16 +9,45 @@ interface GoalFormProps {
   open: boolean
   onClose: () => void
   onSubmit: (goal: NewGoal, habitIds: string[]) => Promise<void>
+  onUpdate?: (id: string, updates: Partial<Goal>, habitIds: string[]) => Promise<void>
+  initialValues?: Goal
+  initialHabitIds?: string[]
   habits?: Habit[]
 }
 
-export function GoalForm({ open, onClose, onSubmit, habits = [] }: GoalFormProps) {
+export function GoalForm({
+  open,
+  onClose,
+  onSubmit,
+  onUpdate,
+  initialValues,
+  initialHabitIds = [],
+  habits = [],
+}: GoalFormProps) {
+  const isEdit = !!initialValues?.id
+
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [targetDate, setTargetDate] = useState('')
+  const [valueUnit, setValueUnit] = useState('')
+  const [currentValue, setCurrentValue] = useState('')
+  const [targetValue, setTargetValue] = useState('')
   const [selectedHabits, setSelectedHabits] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (open) {
+      setTitle(initialValues?.title ?? '')
+      setDescription(initialValues?.description ?? '')
+      setTargetDate(initialValues?.target_date ?? '')
+      setValueUnit(initialValues?.value_unit ?? '')
+      setCurrentValue(initialValues?.current_value != null ? String(initialValues.current_value) : '')
+      setTargetValue(initialValues?.target_value != null ? String(initialValues.target_value) : '')
+      setSelectedHabits(initialHabitIds)
+      setError('')
+    }
+  }, [open, initialValues, initialHabitIds])
 
   function toggleHabit(id: string) {
     setSelectedHabits((prev) =>
@@ -35,18 +64,20 @@ export function GoalForm({ open, onClose, onSubmit, habits = [] }: GoalFormProps
     setError('')
     setLoading(true)
     try {
-      await onSubmit(
-        {
-          title: title.trim(),
-          description: description.trim() || null,
-          target_date: targetDate || null,
-        },
-        selectedHabits,
-      )
-      setTitle('')
-      setDescription('')
-      setTargetDate('')
-      setSelectedHabits([])
+      const goalData = {
+        title: title.trim(),
+        description: description.trim() || null,
+        target_date: targetDate || null,
+        value_unit: valueUnit.trim() || null,
+        current_value: currentValue !== '' ? parseFloat(currentValue) : null,
+        target_value: targetValue !== '' ? parseFloat(targetValue) : null,
+      }
+
+      if (isEdit && onUpdate && initialValues) {
+        await onUpdate(initialValues.id, goalData, selectedHabits)
+      } else {
+        await onSubmit(goalData, selectedHabits)
+      }
       onClose()
     } finally {
       setLoading(false)
@@ -57,14 +88,14 @@ export function GoalForm({ open, onClose, onSubmit, habits = [] }: GoalFormProps
     <Modal
       open={open}
       onClose={onClose}
-      title="New Goal"
+      title={isEdit ? 'Edit Goal' : 'New Goal'}
       footer={
         <div className="flex gap-3">
           <Button variant="ghost" onClick={onClose} className="flex-1">
             Cancel
           </Button>
           <Button onClick={handleSubmit} loading={loading} className="flex-1">
-            Save Goal
+            {isEdit ? 'Save Changes' : 'Save Goal'}
           </Button>
         </div>
       }
@@ -89,9 +120,41 @@ export function GoalForm({ open, onClose, onSubmit, habits = [] }: GoalFormProps
           label="Target date (optional)"
           type="date"
           value={targetDate}
-          min={todayStr()}
+          min={!isEdit ? todayStr() : undefined}
           onChange={(e) => setTargetDate(e.target.value)}
         />
+
+        {/* Progress tracking */}
+        <div>
+          <label className="text-sm font-medium text-gray-700 block mb-2">
+            Progress tracking (optional)
+          </label>
+          <div className="space-y-2">
+            <Input
+              label="Unit (e.g. km, books, €)"
+              placeholder="unit"
+              value={valueUnit}
+              onChange={(e) => setValueUnit(e.target.value)}
+              maxLength={20}
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <Input
+                label="Current value"
+                type="number"
+                placeholder="0"
+                value={currentValue}
+                onChange={(e) => setCurrentValue(e.target.value)}
+              />
+              <Input
+                label="Target value"
+                type="number"
+                placeholder="100"
+                value={targetValue}
+                onChange={(e) => setTargetValue(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
 
         {habits.length > 0 && (
           <div>
