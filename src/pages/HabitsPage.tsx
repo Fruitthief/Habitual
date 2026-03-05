@@ -8,8 +8,6 @@ import { HabitCard } from '@/components/habits/HabitCard'
 import { HabitForm } from '@/components/habits/HabitForm'
 import { HabitCardSkeleton } from '@/components/ui/Skeleton'
 import { BottomNav } from '@/components/layout/BottomNav'
-import { todayStr } from '@/lib/dates'
-
 export default function HabitsPage() {
   const { user } = useAuthStore()
   const { habits, completions, loading, loadHabits, loadCompletions, addHabit, updateHabit, archiveHabit } =
@@ -51,8 +49,6 @@ export default function HabitsPage() {
     setConfirmArchive(null)
   }
 
-  const today = todayStr()
-
   return (
     <>
       <div className="page-container">
@@ -91,16 +87,13 @@ export default function HabitsPage() {
           ) : (
             habits.map((habit) => {
               const streak = getStreak(habit.id)
-              const completed = completions.some(
-                (c) => c.habit_id === habit.id && c.completed_date === today,
-              )
               return (
                 <div key={habit.id} className="animate-fade-in">
                   <HabitCard
                     habit={habit}
                     streak={streak}
-                    completed={completed}
-                    onToggle={() => {}} // read-only on habits page
+                    completed={false}
+                    onToggle={() => {}}
                     onEdit={() => setEditingHabit(habit)}
                     onArchive={() => setConfirmArchive(habit)}
                     viewOnly

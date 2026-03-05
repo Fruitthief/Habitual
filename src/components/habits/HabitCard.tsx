@@ -48,7 +48,6 @@ export function HabitCard({
   }
 
   function handleTouchMove(e: React.TouchEvent) {
-    if (viewOnly) return
     const dx = e.touches[0].clientX - touchStartX.current
     const dy = Math.abs(e.touches[0].clientY - touchStartY.current)
     if (dy > 20) return // vertical scroll
@@ -75,7 +74,7 @@ export function HabitCard({
   return (
     <div className="relative overflow-hidden rounded-2xl" style={{ touchAction: 'pan-y' }}>
       {/* Swipe-reveal action buttons */}
-      {!viewOnly && (
+      {(onEdit || onArchive) && (
         <div
           className="absolute right-0 top-0 bottom-0 flex items-center gap-2 px-3 bg-gray-100 rounded-r-2xl"
           style={{ width: 72 }}
@@ -125,7 +124,7 @@ export function HabitCard({
         <div className="flex-1 min-w-0">
           <p
             className={`font-medium text-[15px] truncate transition-all ${
-              completed ? 'text-gray-400 line-through' : 'text-gray-900'
+              !viewOnly && completed ? 'text-gray-400 line-through' : 'text-gray-900'
             }`}
           >
             {habit.name}
@@ -157,26 +156,28 @@ export function HabitCard({
         )}
 
         {/* Checkbox */}
-        <button
-          onClick={(e) => { e.stopPropagation(); handleCheck() }}
-          aria-label={completed ? 'Mark incomplete' : 'Mark complete'}
-          className={`
-            w-7 h-7 rounded-full border-2 flex items-center justify-center
-            flex-shrink-0 transition-all duration-200
-            ${completed
-              ? 'border-transparent text-white'
-              : 'border-gray-300 bg-white hover:border-brand'
-            }
-            ${bouncing ? 'animate-spring-bounce' : ''}
-          `}
-          style={completed ? { backgroundColor: habit.color } : {}}
-        >
-          {completed && (
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          )}
-        </button>
+        {!viewOnly && (
+          <button
+            onClick={(e) => { e.stopPropagation(); handleCheck() }}
+            aria-label={completed ? 'Mark incomplete' : 'Mark complete'}
+            className={`
+              w-7 h-7 rounded-full border-2 flex items-center justify-center
+              flex-shrink-0 transition-all duration-200
+              ${completed
+                ? 'border-transparent text-white'
+                : 'border-gray-300 bg-white hover:border-brand'
+              }
+              ${bouncing ? 'animate-spring-bounce' : ''}
+            `}
+            style={completed ? { backgroundColor: habit.color } : {}}
+          >
+            {completed && (
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            )}
+          </button>
+        )}
       </div>
     </div>
   )
