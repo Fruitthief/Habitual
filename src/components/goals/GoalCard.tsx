@@ -23,9 +23,9 @@ export function GoalCard({ goal, linkedHabits = [], onToggleComplete, onDelete, 
   if (hasProgress) {
     const start = goal.start_value ?? 0
     const range = goal.target_value! - start
-    progressPct = range > 0
-      ? Math.min(100, Math.max(0, Math.round(((goal.current_value! - start) / range) * 100)))
-      : 100
+    progressPct = range === 0
+      ? 100
+      : Math.min(100, Math.max(0, Math.round(((goal.current_value! - start) / range) * 100)))
   }
 
   return (
