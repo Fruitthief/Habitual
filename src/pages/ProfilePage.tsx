@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/authStore'
 import { useHabitStore } from '@/store/habitStore'
+import { useGoalStore } from '@/store/goalStore'
 import { useUIStore } from '@/store/uiStore'
 import { getLongestEverStreak } from '@/lib/streak'
 import { BottomNav } from '@/components/layout/BottomNav'
@@ -9,10 +10,13 @@ import { BottomNav } from '@/components/layout/BottomNav'
 export default function ProfilePage() {
   const navigate = useNavigate()
   const { user, settings, updateSettings, signOut } = useAuthStore()
-  const { habits, completions, loadHabits, loadCompletions } = useHabitStore()
+  const { habits, completions, loadHabits, loadCompletions, resetHistory } = useHabitStore()
+  const { resetGoalProgress } = useGoalStore()
   const { addToast } = useUIStore()
   const [notifTime, setNotifTime] = useState(settings?.notification_time ?? '')
   const [savingTime, setSavingTime] = useState(false)
+  const [showResetModal, setShowResetModal] = useState(false)
+  const [resetting, setResetting] = useState(false)
 
   useEffect(() => {
     if (user) {
@@ -59,6 +63,16 @@ export default function ProfilePage() {
   async function handleSignOut() {
     await signOut()
     navigate('/login')
+  }
+
+  async function handleResetHistory() {
+    if (!user) return
+    setResetting(true)
+    await resetHistory(user.id)
+    await resetGoalProgress(user.id)
+    setResetting(false)
+    setShowResetModal(false)
+    addToast('History reset — fresh start! 🌱', 'success')
   }
 
   return (
@@ -133,7 +147,7 @@ export default function ProfilePage() {
             <button
               onClick={handleSaveNotifTime}
               disabled={savingTime}
-              className="bg-brand text-white px-4 py-3 rounded-xl text-sm font-semibold active:scale-95 transition-all disabled:opacity-50 flex-shrink-0"
+              className="bg-brand text-black px-4 py-3 rounded-xl text-sm font-semibold active:scale-95 transition-all disabled:opacity-50 flex-shrink-0"
             >
               {savingTime ? '...' : 'Save'}
             </button>
@@ -154,6 +168,14 @@ export default function ProfilePage() {
           </div>
         </div>
 
+        {/* Reset history */}
+        <button
+          onClick={() => setShowResetModal(true)}
+          className="w-full py-3.5 rounded-xl border-2 border-amber-500 text-amber-500 font-semibold text-sm active:scale-95 transition-all hover:bg-amber-50 mb-3"
+        >
+          Reset History
+        </button>
+
         {/* Sign out */}
         <button
           onClick={handleSignOut}
@@ -164,6 +186,35 @@ export default function ProfilePage() {
       </div>
 
       <BottomNav />
+
+      {/* Reset History Modal */}
+      {showResetModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-6">
+          <div className="absolute inset-0 bg-black/40" onClick={() => setShowResetModal(false)} />
+          <div className="relative rounded-2xl p-6 w-full max-w-sm shadow-modal animate-scale-in" style={{ backgroundColor: '#111111', border: '1px solid #1e1e1e' }}>
+            <h3 className="font-display text-lg font-semibold mb-2" style={{ color: '#f0f0f0' }}>Reset history?</h3>
+            <p className="text-sm mb-5" style={{ color: '#888888' }}>
+              This will permanently delete all your completion history and reset goal progress. Your habits and goals will be kept, but all streaks and stats start fresh.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowResetModal(false)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium active:scale-95 transition-all"
+                style={{ border: '1px solid #2a2a2a', color: '#aaaaaa', backgroundColor: '#161616' }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleResetHistory}
+                disabled={resetting}
+                className="flex-1 py-2.5 rounded-xl bg-amber-500 text-black text-sm font-semibold active:scale-95 transition-all disabled:opacity-50"
+              >
+                {resetting ? '...' : 'Reset'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

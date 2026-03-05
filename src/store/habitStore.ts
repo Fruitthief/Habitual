@@ -20,6 +20,7 @@ interface HabitState {
   getCompletionsForHabit: (habitId: string) => HabitCompletion[]
   getCompletionsForDate: (date: string) => HabitCompletion[]
   isCompleted: (habitId: string, date?: string) => boolean
+  resetHistory: (userId: string) => Promise<void>
   reset: () => void
 }
 
@@ -152,6 +153,11 @@ export const useHabitStore = create<HabitState>((set, get) => ({
   isCompleted: (habitId, date) => {
     const d = date ?? todayStr()
     return get().completions.some((c) => c.habit_id === habitId && c.completed_date === d)
+  },
+
+  resetHistory: async (userId) => {
+    await supabase.from('habit_completions').delete().eq('user_id', userId)
+    set({ completions: [] })
   },
 
   reset: () => set({ habits: [], completions: [], loading: false, error: null }),

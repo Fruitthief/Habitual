@@ -218,7 +218,7 @@ export default function HomePage() {
           <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-30">
             <button
               onClick={() => setViewDate(todayStr())}
-              className="bg-brand text-white text-sm font-semibold px-5 py-2.5 rounded-full shadow-lg active:scale-95 transition-all"
+              className="bg-brand text-black text-sm font-semibold px-5 py-2.5 rounded-full shadow-lg active:scale-95 transition-all"
             >
               ← Back to Today
             </button>

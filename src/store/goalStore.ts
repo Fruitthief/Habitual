@@ -15,6 +15,7 @@ interface GoalState {
   uncompleteGoal: (id: string) => Promise<void>
   deleteGoal: (id: string) => Promise<void>
   getHabitsForGoal: (goalId: string) => string[]
+  resetGoalProgress: (userId: string) => Promise<void>
   reset: () => void
 }
 
@@ -43,9 +44,18 @@ export const useGoalStore = create<GoalState>((set, get) => ({
   },
 
   addGoal: async (userId, goal, habitIds = []) => {
+    // Build payload — omit null/undefined progress fields so the insert
+    // succeeds even if the DB migration for those columns hasn't been run yet.
+    const { start_value, current_value, target_value, value_unit, ...base } = goal
+    const payload: Record<string, unknown> = { ...base, user_id: userId }
+    if (start_value != null) payload.start_value = start_value
+    if (current_value != null) payload.current_value = current_value
+    if (target_value != null) payload.target_value = target_value
+    if (value_unit != null) payload.value_unit = value_unit
+
     const { data, error } = await supabase
       .from('goals')
-      .insert({ ...goal, user_id: userId })
+      .insert(payload)
       .select()
       .single()
 
@@ -112,6 +122,16 @@ export const useGoalStore = create<GoalState>((set, get) => ({
 
   getHabitsForGoal: (goalId) => {
     return get().goalHabits.filter((gh) => gh.goal_id === goalId).map((gh) => gh.habit_id)
+  },
+
+  resetGoalProgress: async (userId) => {
+    await supabase
+      .from('goals')
+      .update({ completed_at: null, current_value: null })
+      .eq('user_id', userId)
+    set((state) => ({
+      goals: state.goals.map((g) => ({ ...g, completed_at: null, current_value: g.start_value ?? null })),
+    }))
   },
 
   reset: () => set({ goals: [], goalHabits: [], loading: false }),

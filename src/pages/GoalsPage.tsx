@@ -167,7 +167,7 @@ export default function GoalsPage() {
       {/* FAB */}
       <button
         onClick={() => setShowAdd(true)}
-        className="fixed bottom-24 right-5 w-14 h-14 bg-brand text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:bg-brand-dark active:scale-95 transition-all z-40"
+        className="fixed bottom-24 right-5 w-14 h-14 bg-brand text-black rounded-full flex items-center justify-center text-2xl shadow-lg hover:bg-brand-dark active:scale-95 transition-all z-40"
         aria-label="Add goal"
       >
         +
