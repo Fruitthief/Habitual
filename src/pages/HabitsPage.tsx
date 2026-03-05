@@ -57,20 +57,11 @@ export default function HabitsPage() {
     <>
       <div className="page-container">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="font-display text-2xl font-bold text-brand-dark">My Habits</h1>
-            <p className="text-sm text-gray-400 mt-0.5">
-              {habits.length} active habit{habits.length !== 1 ? 's' : ''}
-            </p>
-          </div>
-          <button
-            onClick={() => setShowAdd(true)}
-            className="w-11 h-11 bg-brand text-white rounded-2xl flex items-center justify-center text-xl shadow-card hover:bg-brand-dark active:scale-95 transition-all"
-            aria-label="Add habit"
-          >
-            +
-          </button>
+        <div className="mb-6">
+          <h1 className="font-display text-2xl font-bold text-brand-dark">My Habits</h1>
+          <p className="text-sm text-gray-400 mt-0.5">
+            {habits.length} active habit{habits.length !== 1 ? 's' : ''}
+          </p>
         </div>
 
         {/* Habit list */}
@@ -129,6 +120,15 @@ export default function HabitsPage() {
       </div>
 
       <BottomNav />
+
+      {/* FAB */}
+      <button
+        onClick={() => setShowAdd(true)}
+        className="fixed bottom-24 right-5 w-14 h-14 bg-brand text-white rounded-full flex items-center justify-center text-2xl shadow-lg hover:bg-brand-dark active:scale-95 transition-all z-40"
+        aria-label="Add habit"
+      >
+        +
+      </button>
 
       {/* Add habit modal */}
       <HabitForm
