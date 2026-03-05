@@ -49,7 +49,11 @@ export function GoalForm({
       setSelectedHabits(initialHabitIds)
       setError('')
     }
-  }, [open, initialValues, initialHabitIds])
+    // Only re-init when the modal opens/closes — NOT on every prop update.
+    // Including initialValues/initialHabitIds would reset the form on every keystroke
+    // because the default [] parameter creates a new reference on each render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   function toggleHabit(id: string) {
     setSelectedHabits((prev) =>
