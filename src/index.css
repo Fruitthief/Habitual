@@ -1,0 +1,272 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── DARK MODE VARIABLES ─────────────────────────── */
+:root {
+  --bg: #000000;
+  --surface: #0f0f0f;
+  --elevated: #161616;
+  --border: #1e1e1e;
+  --border-mid: #2a2a2a;
+  --text: #f0f0f0;
+  --text-secondary: #888888;
+  --text-muted: #4a4a4a;
+  --brand: #2d5a27;
+  --brand-text: #4ade80;
+  --brand-bg: #0a1a09;
+}
+
+@layer base {
+  html {
+    font-family: 'Epilogue', system-ui, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    scroll-behavior: smooth;
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: #000000;
+    color: #f0f0f0;
+    overscroll-behavior-y: none;
+    margin: 0;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: 'Playfair Display', Georgia, serif;
+    color: #f0f0f0;
+  }
+
+  input, textarea, select {
+    color-scheme: dark;
+  }
+}
+
+@layer components {
+  .page-container {
+    @apply max-w-md mx-auto min-h-screen px-4 pt-4 pb-28;
+  }
+
+  .card {
+    @apply rounded-2xl p-4;
+    background-color: #0f0f0f;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+    border: 1px solid #1e1e1e;
+  }
+
+  .btn-primary {
+    @apply w-full text-white font-semibold py-3.5 px-6 rounded-xl
+           active:scale-95 transition-all duration-150
+           disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100;
+    background-color: #2d5a27;
+  }
+
+  .btn-primary:hover:not(:disabled) {
+    background-color: #3a7033;
+  }
+
+  .btn-secondary {
+    @apply w-full font-semibold py-3.5 px-6 rounded-xl
+           active:scale-95 transition-all duration-150;
+    background-color: #0a1a09;
+    color: #4ade80;
+  }
+
+  .btn-ghost {
+    @apply font-medium py-2 px-3 rounded-lg
+           active:scale-95 transition-all duration-150;
+    color: #4ade80;
+  }
+
+  .btn-ghost:hover {
+    background-color: #0a1a09;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl border transition-all text-[15px];
+    background-color: #141414;
+    border-color: #2a2a2a;
+    color: #f0f0f0;
+  }
+
+  .input-field::placeholder {
+    color: #444444;
+  }
+
+  .input-field:focus {
+    outline: none;
+    border-color: #2d5a27;
+    box-shadow: 0 0 0 3px rgba(45, 90, 39, 0.2);
+  }
+
+  .skeleton {
+    @apply rounded-lg overflow-hidden relative;
+    background: linear-gradient(90deg, #161616 25%, #1e1e1e 50%, #161616 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
+  .font-body {
+    font-family: 'Epilogue', system-ui, sans-serif;
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+}
+
+/* ─── TAILWIND CLASS OVERRIDES FOR DARK MODE ─────────────────────────── */
+
+/* Backgrounds */
+.dark .bg-white       { background-color: #0f0f0f !important; }
+.dark .bg-gray-50     { background-color: #0a0a0a !important; }
+.dark .bg-gray-100    { background-color: #161616 !important; }
+.dark .bg-gray-200    { background-color: #1e1e1e !important; }
+.dark .bg-gray-800    { background-color: #1a1a1a !important; }
+.dark .bg-gray-900    { background-color: #111111 !important; }
+
+/* Brand backgrounds */
+.dark .bg-brand-light { background-color: #0a1a09 !important; }
+.dark .bg-brand-pale  { background-color: #060e06 !important; }
+.dark .hover\:bg-brand-pale:hover { background-color: #0a1a09 !important; }
+
+/* Text colors */
+.dark .text-gray-900  { color: #f0f0f0 !important; }
+.dark .text-gray-800  { color: #e0e0e0 !important; }
+.dark .text-gray-700  { color: #cccccc !important; }
+.dark .text-gray-600  { color: #aaaaaa !important; }
+.dark .text-gray-500  { color: #888888 !important; }
+.dark .text-gray-400  { color: #606060 !important; }
+.dark .text-gray-300  { color: #484848 !important; }
+.dark .text-gray-200  { color: #333333 !important; }
+
+/* Brand text */
+.dark .text-brand      { color: #4ade80 !important; }
+.dark .text-brand-dark { color: #4ade80 !important; }
+
+/* Border colors */
+.dark .border-gray-50  { border-color: #161616 !important; }
+.dark .border-gray-100 { border-color: #1e1e1e !important; }
+.dark .border-gray-200 { border-color: #2a2a2a !important; }
+.dark .border-gray-300 { border-color: #333333 !important; }
+.dark .border-brand    { border-color: #2d5a27 !important; }
+
+/* Rings */
+.dark .ring-brand\/40  { --tw-ring-color: rgba(45, 90, 39, 0.4) !important; }
+.dark .focus\:ring-brand\/20:focus { --tw-ring-color: rgba(45, 90, 39, 0.2) !important; }
+.dark .focus\:border-brand:focus { border-color: #2d5a27 !important; }
+
+/* Error states (red) */
+.dark .bg-red-50    { background-color: #1a0808 !important; }
+.dark .bg-red-100   { background-color: #1f0a0a !important; }
+.dark .text-red-600 { color: #f87171 !important; }
+.dark .text-red-500 { color: #f87171 !important; }
+.dark .text-red-400 { color: #fca5a5 !important; }
+.dark .border-red-100  { border-color: #2a0808 !important; }
+.dark .border-red-200  { border-color: #3a1010 !important; }
+.dark .hover\:bg-red-50:hover  { background-color: #1a0808 !important; }
+.dark .hover\:bg-red-100:hover { background-color: #1f0a0a !important; }
+.dark .border-red-200  { border-color: #3a1010 !important; }
+.dark .hover\:text-red-400:hover { color: #fca5a5 !important; }
+
+/* Success / green */
+.dark .bg-green-500 { background-color: #16a34a !important; }
+.dark .text-green-500 { color: #4ade80 !important; }
+
+/* Amber/orange (streak, goals) */
+.dark .bg-amber-400    { background-color: #b45309 !important; }
+.dark .bg-amber-50     { background-color: #1a1000 !important; }
+.dark .text-amber-500  { color: #fbbf24 !important; }
+.dark .text-amber-600  { color: #f59e0b !important; }
+.dark .border-amber-200 { border-color: #292000 !important; }
+.dark .from-orange-50  { --tw-gradient-from: #120d00 !important; }
+.dark .to-amber-50     { --tw-gradient-to: #120d00 !important; }
+.dark .border-orange-100 { border-color: #1e1400 !important; }
+
+/* Blue */
+.dark .text-blue-500 { color: #60a5fa !important; }
+.dark .hover\:bg-blue-50:hover { background-color: #0d1929 !important; }
+
+/* Hover states */
+.dark .hover\:bg-gray-50:hover  { background-color: #141414 !important; }
+.dark .hover\:bg-gray-100:hover { background-color: #1a1a1a !important; }
+.dark .hover\:bg-gray-200:hover { background-color: #222222 !important; }
+
+/* Progress bar track */
+.dark .bg-gray-100.rounded-full { background-color: #1e1e1e !important; }
+
+/* Placeholder in brand-light sections */
+.dark .bg-brand-pale { background-color: #060e06 !important; }
+
+/* Backdrop */
+.dark .bg-black\/40 { background-color: rgba(0,0,0,0.75) !important; }
+.dark .bg-black\/90 { background-color: rgba(0,0,0,0.92) !important; }
+
+/* EmojiPicker grid */
+.dark .bg-gray-50.rounded-xl { background-color: #141414 !important; }
+.dark .hover\:bg-white:hover { background-color: #1e1e1e !important; }
+
+/* Calendar day overrides */
+.dark .bg-gray-200.text-gray-500  { background-color: #1e1e1e !important; color: #606060 !important; }
+.dark .bg-gray-100.text-gray-300  { background-color: #141414 !important; color: #333333 !important; }
+
+/* ─── CUSTOM ELEMENTS ─────────────────────────────── */
+
+/* Checkbox */
+.habit-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  position: relative;
+  background-color: #161616;
+  border: 2px solid #333333;
+}
+
+.habit-checkbox:checked {
+  border-color: transparent;
+}
+
+.habit-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -56%) rotate(45deg);
+  width: 6px;
+  height: 10px;
+  border-right: 2.5px solid white;
+  border-bottom: 2.5px solid white;
+}
+
+/* Confetti particle */
+.confetti-piece {
+  position: fixed;
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  animation: confettiFall 1.2s ease-in forwards;
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Swipe container */
+.swipeable {
+  touch-action: pan-y;
+  user-select: none;
+  overflow: hidden;
+}

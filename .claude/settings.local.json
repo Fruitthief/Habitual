@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create vite@latest . -- --template react-ts --yes 2>&1 | tail -5)",
+      "Bash(npm create vite@latest . -- --template react-ts 2>&1)",
+      "Bash(printf '\\\\n' | npm create vite@latest /tmp/habitual-temp -- --template react-ts 2>&1 && echo \"Created successfully\")",
+      "Bash(cp -r /Users/kai-uwe.url/my-project/Habitual/tmp/habitual-temp/. /Users/kai-uwe.url/my-project/Habitual/ && rm -rf /Users/kai-uwe.url/my-project/Habitual/tmp && ls /Users/kai-uwe.url/my-project/Habitual/)",
+      "Bash(npm install @supabase/supabase-js react-router-dom zustand @types/node 2>&1 | tail -5)",
+      "Bash(npm install @supabase/supabase-js react-router-dom zustand @types/node --legacy-peer-deps 2>&1 | tail -8)",
+      "Bash(npm install @supabase/supabase-js react-router-dom zustand @types/node --legacy-peer-deps --cache /tmp/npm-cache 2>&1 | tail -8)",
+      "Bash(npm install -D tailwindcss@3 postcss autoprefixer vite-plugin-pwa workbox-window --legacy-peer-deps --cache /tmp/npm-cache 2>&1 | tail -5)",
+      "Bash(npm install -D @tailwindcss/forms --legacy-peer-deps --cache /tmp/npm-cache 2>&1 | tail -3 && npx tailwindcss init -p 2>&1)",
+      "Bash(npm run build --cache /tmp/npm-cache 2>&1)",
+      "Bash(npm run dev 2>&1)",
+      "Bash(gh auth status 2>&1)",
+      "Bash(cat > /Users/kai-uwe.url/my-project/Habitual/.gitignore << 'EOF'\n# Dependencies\nnode_modules/\n\n# Build output\ndist/\n\n# Environment variables — NEVER commit these\n.env\n.env.local\n.env.*.local\n\n# Editor\n.DS_Store\n.vscode/\n.idea/\n\n# Logs\n*.log\nnpm-debug.log*\n\n# TypeScript cache\n*.tsbuildinfo\nEOF\necho \"Done\")",
+      "Bash(which vercel 2>&1 || npx vercel --version 2>&1)",
+      "Bash(vercel whoami 2>&1)",
+      "Bash(vercel --yes \\\\\n  --name habitual \\\\\n  --build-env VITE_SUPABASE_URL=https://blzxlhkeupbmnijupldu.supabase.co \\\\\n  --build-env VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJsenhsaGtldXBibW5panVwbGR1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3MDU2NDEsImV4cCI6MjA4ODI4MTY0MX0.4Nt5e2SpfRWidghFSZUXt7ThME1xjwQrOOZQM8mxX5A \\\\\n  2>&1)",
+      "Bash(vercel --prod 2>&1 | grep -E \"\\(Production|Inspect|Error|Aliased\\)\")"
+    ]
+  }
+}
