@@ -16,10 +16,17 @@ export function GoalCard({ goal, linkedHabits = [], onComplete, onDelete, onEdit
   const days = goal.target_date ? daysUntil(goal.target_date) : null
   const isOverdue = days !== null && days < 0 && !isCompleted
 
-  const hasProgress = goal.target_value != null && goal.target_value > 0
-  const progressPct = hasProgress
-    ? Math.min(100, Math.round(((goal.current_value ?? 0) / goal.target_value!) * 100))
-    : null
+  // Only show bar when both current and target are explicitly set
+  const hasProgress = goal.target_value != null && goal.current_value != null
+
+  let progressPct: number | null = null
+  if (hasProgress) {
+    const start = goal.start_value ?? 0
+    const range = goal.target_value! - start
+    progressPct = range > 0
+      ? Math.min(100, Math.max(0, Math.round(((goal.current_value! - start) / range) * 100)))
+      : 100
+  }
 
   return (
     <div
@@ -69,9 +76,14 @@ export function GoalCard({ goal, linkedHabits = [], onComplete, onDelete, onEdit
       {/* Progress bar */}
       {hasProgress && (
         <div>
-          <div className="flex items-center justify-between text-xs text-gray-500 mb-1">
-            <span>
-              {goal.current_value ?? 0} / {goal.target_value}{goal.value_unit ? ` ${goal.value_unit}` : ''}
+          <div className="flex items-center justify-between text-xs mb-1">
+            <span className="text-gray-500">
+              {goal.start_value != null && (
+                <span className="text-gray-400">{goal.start_value} → </span>
+              )}
+              <span className="font-semibold text-gray-800">{goal.current_value}</span>
+              <span className="text-gray-400"> → {goal.target_value}</span>
+              {goal.value_unit && <span className="text-gray-400"> {goal.value_unit}</span>}
             </span>
             <span className="font-medium text-brand">{progressPct}%</span>
           </div>

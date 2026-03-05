@@ -26,12 +26,14 @@ export interface Goal {
   target_date: string | null // YYYY-MM-DD
   completed_at: string | null
   created_at: string
+  start_value: number | null
   current_value: number | null
   target_value: number | null
   value_unit: string | null
 }
 
 export type NewGoal = Pick<Goal, 'title' | 'description' | 'target_date'> & {
+  start_value?: number | null
   current_value?: number | null
   target_value?: number | null
   value_unit?: string | null

@@ -110,6 +110,7 @@ create policy "Users manage own settings"
 -- MIGRATION: Goal numeric progress tracking
 -- Run this if you already have the goals table
 -- ─────────────────────────────────────────
+alter table goals add column if not exists start_value   numeric default null;
 alter table goals add column if not exists current_value numeric default null;
 alter table goals add column if not exists target_value  numeric default null;
 alter table goals add column if not exists value_unit    text    default null;

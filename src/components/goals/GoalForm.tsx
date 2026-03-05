@@ -30,6 +30,7 @@ export function GoalForm({
   const [description, setDescription] = useState('')
   const [targetDate, setTargetDate] = useState('')
   const [valueUnit, setValueUnit] = useState('')
+  const [startValue, setStartValue] = useState('')
   const [currentValue, setCurrentValue] = useState('')
   const [targetValue, setTargetValue] = useState('')
   const [selectedHabits, setSelectedHabits] = useState<string[]>([])
@@ -42,6 +43,7 @@ export function GoalForm({
       setDescription(initialValues?.description ?? '')
       setTargetDate(initialValues?.target_date ?? '')
       setValueUnit(initialValues?.value_unit ?? '')
+      setStartValue(initialValues?.start_value != null ? String(initialValues.start_value) : '')
       setCurrentValue(initialValues?.current_value != null ? String(initialValues.current_value) : '')
       setTargetValue(initialValues?.target_value != null ? String(initialValues.target_value) : '')
       setSelectedHabits(initialHabitIds)
@@ -55,6 +57,10 @@ export function GoalForm({
     )
   }
 
+  function parseNum(s: string): number | null {
+    return s.trim() !== '' ? parseFloat(s) : null
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!title.trim()) {
@@ -64,13 +70,14 @@ export function GoalForm({
     setError('')
     setLoading(true)
     try {
-      const goalData = {
+      const goalData: NewGoal = {
         title: title.trim(),
         description: description.trim() || null,
         target_date: targetDate || null,
         value_unit: valueUnit.trim() || null,
-        current_value: currentValue !== '' ? parseFloat(currentValue) : null,
-        target_value: targetValue !== '' ? parseFloat(targetValue) : null,
+        start_value: parseNum(startValue),
+        current_value: parseNum(currentValue),
+        target_value: parseNum(targetValue),
       }
 
       if (isEdit && onUpdate && initialValues) {
@@ -102,6 +109,7 @@ export function GoalForm({
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <Input
+          id="goal-title"
           label="Goal title"
           placeholder="e.g. Run a 5K, Read 12 books this year..."
           value={title}
@@ -111,12 +119,14 @@ export function GoalForm({
           autoFocus
         />
         <Textarea
+          id="goal-description"
           label="Description (optional)"
           placeholder="Why does this goal matter to you?"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
         />
         <Input
+          id="goal-target-date"
           label="Target date (optional)"
           type="date"
           value={targetDate}
@@ -126,19 +136,27 @@ export function GoalForm({
 
         {/* Progress tracking */}
         <div>
-          <label className="text-sm font-medium text-gray-700 block mb-2">
-            Progress tracking (optional)
-          </label>
+          <p className="text-sm font-medium text-gray-700 mb-2">Progress tracking (optional)</p>
           <div className="space-y-2">
             <Input
-              label="Unit (e.g. km, books, €)"
-              placeholder="unit"
+              id="goal-unit"
+              label="Unit"
+              placeholder="km, books, kg, €…"
               value={valueUnit}
               onChange={(e) => setValueUnit(e.target.value)}
               maxLength={20}
             />
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-3 gap-2">
               <Input
+                id="goal-start"
+                label="Starting value"
+                type="number"
+                placeholder="0"
+                value={startValue}
+                onChange={(e) => setStartValue(e.target.value)}
+              />
+              <Input
+                id="goal-current"
                 label="Current value"
                 type="number"
                 placeholder="0"
@@ -146,6 +164,7 @@ export function GoalForm({
                 onChange={(e) => setCurrentValue(e.target.value)}
               />
               <Input
+                id="goal-target"
                 label="Target value"
                 type="number"
                 placeholder="100"
