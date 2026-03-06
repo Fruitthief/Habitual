@@ -11,6 +11,7 @@ export default function SignupPage() {
   const [confirm, setConfirm] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [sent, setSent] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -33,8 +34,25 @@ export default function SignupPage() {
     if (authError) {
       setError(authError.message)
     } else {
-      navigate('/onboarding')
+      setSent(true)
     }
+  }
+
+  if (sent) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6 py-12">
+        <div className="w-full max-w-sm text-center">
+          <div className="text-5xl mb-4">📬</div>
+          <h1 className="font-display text-2xl font-bold text-brand-dark mb-2">Check your email</h1>
+          <p className="text-gray-500 text-sm mb-1">We sent a confirmation link to</p>
+          <p className="text-brand font-semibold text-sm mb-6">{email}</p>
+          <p className="text-gray-400 text-xs mb-8">Click the link in the email to activate your account, then come back to sign in.</p>
+          <Link to="/login" className="text-brand font-semibold text-sm hover:underline">
+            Go to sign in
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   return (
