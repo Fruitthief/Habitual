@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { EmojiPicker } from '@/components/ui/EmojiPicker'
 import { ColorPicker } from '@/components/ui/ColorPicker'
+import { scheduleViaServiceWorker } from '@/lib/notifications'
 
 type Step = 1 | 2 | 3
 
@@ -33,7 +34,10 @@ export default function OnboardingPage() {
   async function requestNotification() {
     if ('Notification' in window) {
       const perm = await Notification.requestPermission()
-      setNotifGranted(perm === 'granted')
+      const granted = perm === 'granted'
+      setNotifGranted(granted)
+      // Schedule a default 9 AM reminder when permission is granted
+      if (granted) scheduleViaServiceWorker('09:00')
     }
   }
 

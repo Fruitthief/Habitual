@@ -237,7 +237,6 @@ export default function HomePage() {
                     completed={completed}
                     onToggle={() => handleToggle(habit.id)}
                     onRequestComplete={isToday && coinsAvailable > 0 ? () => setCoinChoiceHabitId(habit.id) : undefined}
-                    viewOnly={!isToday}
                     date={viewDate}
                   />
                 </div>

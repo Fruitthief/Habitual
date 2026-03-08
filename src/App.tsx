@@ -6,6 +6,7 @@ import { useHabitStore } from '@/store/habitStore'
 import { useGoalStore } from '@/store/goalStore'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { Toast } from '@/components/ui/Toast'
+import { scheduleViaServiceWorker } from '@/lib/notifications'
 
 // Pages
 import LoginPage from '@/pages/LoginPage'
@@ -24,11 +25,15 @@ export default function App() {
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session)
       setUser(session?.user ?? null)
       if (session?.user) {
-        loadSettings(session.user.id)
+        await loadSettings(session.user.id)
+        const { settings } = useAuthStore.getState()
+        if (settings?.notification_time && 'Notification' in window && Notification.permission === 'granted') {
+          scheduleViaServiceWorker(settings.notification_time)
+        }
       }
       setLoading(false)
     })

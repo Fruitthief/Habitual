@@ -28,7 +28,11 @@ export default function SignupPage() {
     }
     setError('')
     setLoading(true)
-    const { error: authError } = await supabase.auth.signUp({ email, password })
+    const { error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: window.location.origin },
+    })
     setLoading(false)
     if (authError) {
       setError(authError.message)

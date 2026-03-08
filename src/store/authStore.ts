@@ -27,7 +27,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setLoading: (loading) => set({ loading }),
 
   loadSettings: async (userId) => {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('user_settings')
       .select('*')
       .eq('user_id', userId)
@@ -35,16 +35,27 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     if (data) {
       set({ settings: data as UserSettings })
-    } else {
-      // Create default settings row
+    } else if (error?.code === 'PGRST116') {
+      // Row does not exist yet — create defaults for new user
       const defaults: UserSettings = {
         user_id: userId,
         notification_time: null,
         onboarding_completed: false,
       }
-      await supabase.from('user_settings').insert(defaults)
-      set({ settings: defaults })
+      const { error: insertError } = await supabase.from('user_settings').insert(defaults)
+      if (!insertError) {
+        set({ settings: defaults })
+      } else {
+        // Row was created by another tab/request; fetch it
+        const { data: existing } = await supabase
+          .from('user_settings')
+          .select('*')
+          .eq('user_id', userId)
+          .single()
+        if (existing) set({ settings: existing as UserSettings })
+      }
     }
+    // On other errors (network etc.) we leave settings as-is to avoid false onboarding redirect
   },
 
   updateSettings: async (updates) => {

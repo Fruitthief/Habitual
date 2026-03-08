@@ -10,8 +10,8 @@
   --border: #1e1e1e;
   --border-mid: #2a2a2a;
   --text: #f0f0f0;
-  --text-secondary: #888888;
-  --text-muted: #4a4a4a;
+  --text-secondary: #999999;
+  --text-muted: #686868;
   --brand: #22c55e;
   --brand-text: #4ade80;
   --brand-bg: #0a1a09;
@@ -143,12 +143,12 @@
 /* Text colors */
 .dark .text-gray-900  { color: #f0f0f0 !important; }
 .dark .text-gray-800  { color: #e0e0e0 !important; }
-.dark .text-gray-700  { color: #cccccc !important; }
-.dark .text-gray-600  { color: #aaaaaa !important; }
-.dark .text-gray-500  { color: #888888 !important; }
-.dark .text-gray-400  { color: #606060 !important; }
-.dark .text-gray-300  { color: #484848 !important; }
-.dark .text-gray-200  { color: #333333 !important; }
+.dark .text-gray-700  { color: #d0d0d0 !important; }
+.dark .text-gray-600  { color: #b8b8b8 !important; }
+.dark .text-gray-500  { color: #999999 !important; }
+.dark .text-gray-400  { color: #808080 !important; }
+.dark .text-gray-300  { color: #606060 !important; }
+.dark .text-gray-200  { color: #484848 !important; }
 
 /* Brand text */
 .dark .text-brand      { color: #4ade80 !important; }
@@ -217,8 +217,8 @@
 .dark .hover\:bg-white:hover { background-color: #1e1e1e !important; }
 
 /* Calendar day overrides */
-.dark .bg-gray-200.text-gray-500  { background-color: #1e1e1e !important; color: #606060 !important; }
-.dark .bg-gray-100.text-gray-300  { background-color: #141414 !important; color: #333333 !important; }
+.dark .bg-gray-200.text-gray-500  { background-color: #1e1e1e !important; color: #808080 !important; }
+.dark .bg-gray-100.text-gray-300  { background-color: #141414 !important; color: #606060 !important; }
 
 /* ─── CUSTOM ELEMENTS ─────────────────────────────── */
 

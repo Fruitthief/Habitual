@@ -6,6 +6,7 @@ import { useGoalStore } from '@/store/goalStore'
 import { useUIStore } from '@/store/uiStore'
 import { getLongestEverStreak } from '@/lib/streak'
 import { BottomNav } from '@/components/layout/BottomNav'
+import { requestAndScheduleNotification, cancelScheduledNotification } from '@/lib/notifications'
 
 export default function ProfilePage() {
   const navigate = useNavigate()
@@ -52,11 +53,14 @@ export default function ProfilePage() {
     setSavingTime(true)
     await updateSettings({ notification_time: notifTime || null })
 
-    // Schedule a local notification if permission granted
-    if (notifTime && 'Notification' in window && Notification.permission === 'granted') {
-      scheduleLocalNotification(notifTime)
+    if (notifTime) {
+      const granted = await requestAndScheduleNotification(notifTime)
+      if (!granted) addToast('Enable notifications in browser settings first', 'error')
+      else addToast('Reminder time saved ✓', 'success')
+    } else {
+      cancelScheduledNotification()
+      addToast('Reminder removed', 'success')
     }
-    addToast('Reminder time saved ✓', 'success')
     setSavingTime(false)
   }
 
@@ -152,9 +156,9 @@ export default function ProfilePage() {
               {savingTime ? '...' : 'Save'}
             </button>
           </div>
-          {notifTime && 'Notification' in window && Notification.permission !== 'granted' && (
+          {'Notification' in window && Notification.permission === 'denied' && (
             <p className="text-xs text-amber-600 mt-2">
-              ⚠️ Please enable notifications in your browser settings.
+              ⚠️ Notifications blocked — enable them in browser settings, then save again.
             </p>
           )}
         </div>
@@ -228,22 +232,3 @@ function Row({ label, value }: { label: string; value: string }) {
   )
 }
 
-function scheduleLocalNotification(time: string) {
-  // Parse time and compute ms until next occurrence
-  const [hh, mm] = time.split(':').map(Number)
-  const now = new Date()
-  const target = new Date()
-  target.setHours(hh, mm, 0, 0)
-  if (target <= now) target.setDate(target.getDate() + 1)
-  const delay = target.getTime() - now.getTime()
-
-  setTimeout(() => {
-    if (Notification.permission === 'granted') {
-      new Notification('Habitual 🌿', {
-        body: "Time to check in on your habits! Small steps, big change.",
-        icon: '/icon-192.png',
-        badge: '/icon-192.png',
-      })
-    }
-  }, delay)
-}
