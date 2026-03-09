@@ -143,6 +143,7 @@ export default function GoalsPage() {
                       goal={goal}
                       onToggleComplete={() => handleToggleComplete(goal.id)}
                       onDelete={() => handleDelete(goal.id)}
+                      onEdit={() => setEditingGoal(goal)}
                     />
                   ))}
                 </div>

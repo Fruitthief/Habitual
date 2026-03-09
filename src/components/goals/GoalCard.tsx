@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Goal } from '@/types/database'
 import { daysUntil, formatShortDate, strToDate } from '@/lib/dates'
 import { haptic } from '@/lib/haptics'
@@ -11,7 +11,8 @@ interface GoalCardProps {
 }
 
 export function GoalCard({ goal, onToggleComplete, onDelete, onEdit }: GoalCardProps) {
-  const [expanded, setExpanded] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
 
   const isCompleted = !!goal.completed_at
   const days = goal.target_date ? daysUntil(goal.target_date) : null
@@ -37,6 +38,18 @@ export function GoalCard({ goal, onToggleComplete, onDelete, onEdit }: GoalCardP
     timePct = range <= 0 ? 100 : Math.min(100, Math.max(0, Math.round(((now - start) / range) * 100)))
   }
 
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [menuOpen])
+
   return (
     <div
       className={`card border-l-4 space-y-2 animate-fade-in cursor-pointer select-none ${
@@ -46,7 +59,7 @@ export function GoalCard({ goal, onToggleComplete, onDelete, onEdit }: GoalCardP
           ? 'border-l-red-400'
           : 'border-l-brand'
       }`}
-      onClick={() => setExpanded((e) => !e)}
+      onClick={() => { haptic('light'); onEdit?.() }}
     >
       {/* Title row */}
       <div className="flex items-start justify-between gap-2">
@@ -63,23 +76,42 @@ export function GoalCard({ goal, onToggleComplete, onDelete, onEdit }: GoalCardP
             <p className="text-sm text-gray-500 mt-0.5 line-clamp-2">{goal.description}</p>
           )}
         </div>
-        <div className="flex items-center gap-1 flex-shrink-0">
-          {onEdit && !isCompleted && (
-            <button
-              onClick={(e) => { e.stopPropagation(); haptic('light'); onEdit() }}
-              className="text-gray-400 hover:text-blue-500 transition-colors p-1"
-              aria-label="Edit goal"
-            >
-              ✏️
-            </button>
+
+        {/* 3-dot menu */}
+        <div className="relative flex-shrink-0" ref={menuRef}>
+          <button
+            onClick={(e) => { e.stopPropagation(); haptic('light'); setMenuOpen((o) => !o) }}
+            className="text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-lg hover:bg-gray-100"
+            aria-label="Goal options"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <circle cx="12" cy="5" r="2" />
+              <circle cx="12" cy="12" r="2" />
+              <circle cx="12" cy="19" r="2" />
+            </svg>
+          </button>
+
+          {menuOpen && (
+            <div className="absolute right-0 top-8 z-50 bg-white rounded-xl shadow-lg border border-gray-100 py-1 min-w-[160px] animate-fade-in">
+              <button
+                onClick={(e) => { e.stopPropagation(); haptic('medium'); setMenuOpen(false); onToggleComplete() }}
+                className="w-full text-left px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                {isCompleted ? '↩ Mark Active' : '✓ Mark Complete'}
+              </button>
+              <div className="h-px bg-gray-100 mx-2" />
+              <button
+                onClick={(e) => { e.stopPropagation(); haptic('medium'); setMenuOpen(false); onDelete() }}
+                className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 transition-colors"
+              >
+                Delete Goal
+              </button>
+            </div>
           )}
-          <span className={`text-gray-300 text-xs transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}>
-            ▾
-          </span>
         </div>
       </div>
 
-      {/* Progress bar */}
+      {/* Value progress bar */}
       {hasProgress && (
         <div>
           <div className="flex items-center justify-between text-xs mb-1">
@@ -149,28 +181,6 @@ export function GoalCard({ goal, onToggleComplete, onDelete, onEdit }: GoalCardP
           {!isCompleted && goal.target_date && (
             <p className="text-[10px] text-gray-400">{formatShortDate(goal.target_date)}</p>
           )}
-        </div>
-      )}
-
-      {/* Expanded actions */}
-      {expanded && (
-        <div className="pt-1 space-y-2 border-t border-gray-100" onClick={(e) => e.stopPropagation()}>
-          <button
-            onClick={() => { haptic('medium'); onToggleComplete() }}
-            className={`w-full py-2 rounded-xl text-sm font-semibold transition-colors ${
-              isCompleted
-                ? 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                : 'bg-brand-pale text-brand hover:bg-brand-light'
-            }`}
-          >
-            {isCompleted ? '↩ Mark Active' : '✓ Mark Complete'}
-          </button>
-          <button
-            onClick={() => { haptic('medium'); onDelete() }}
-            className="w-full py-2 rounded-xl text-sm font-semibold bg-red-50 text-red-500 hover:bg-red-100 transition-colors"
-          >
-            Delete Goal
-          </button>
         </div>
       )}
     </div>
