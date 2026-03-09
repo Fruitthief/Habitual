@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { Goal } from '@/types/database'
-import { daysUntil, formatShortDate } from '@/lib/dates'
+import { daysUntil, formatShortDate, strToDate } from '@/lib/dates'
 import { haptic } from '@/lib/haptics'
 
 interface GoalCardProps {
@@ -25,6 +25,16 @@ export function GoalCard({ goal, onToggleComplete, onDelete, onEdit }: GoalCardP
     progressPct = range === 0
       ? 100
       : Math.min(100, Math.max(0, Math.round(((goal.current_value! - start) / range) * 100)))
+  }
+
+  // Time progress: how far through the goal's lifespan are we?
+  let timePct: number | null = null
+  if (goal.target_date && !isCompleted) {
+    const start = strToDate(goal.created_at.split('T')[0]).getTime()
+    const end = strToDate(goal.target_date).getTime()
+    const now = new Date().setHours(0, 0, 0, 0)
+    const range = end - start
+    timePct = range <= 0 ? 100 : Math.min(100, Math.max(0, Math.round(((now - start) / range) * 100)))
   }
 
   return (
@@ -95,19 +105,50 @@ export function GoalCard({ goal, onToggleComplete, onDelete, onEdit }: GoalCardP
         </div>
       )}
 
-      {/* Target date */}
+      {/* Target date + time progress bar */}
       {goal.target_date && (
-        <div className="flex items-center gap-2 text-xs">
-          <span className="text-gray-400">🎯</span>
-          <span className={isOverdue ? 'text-red-500 font-medium' : 'text-gray-500'}>
-            {isCompleted
-              ? `Completed ${formatShortDate(goal.completed_at!.split('T')[0])}`
-              : isOverdue
-              ? `Overdue by ${Math.abs(days!)} day${Math.abs(days!) !== 1 ? 's' : ''}`
-              : days === 0
-              ? 'Due today!'
-              : `${days} day${days !== 1 ? 's' : ''} left • ${formatShortDate(goal.target_date)}`}
-          </span>
+        <div className="space-y-1">
+          <div className="flex items-center justify-between text-xs">
+            <span className="flex items-center gap-1.5">
+              <span className="text-gray-400">🗓</span>
+              <span className={isOverdue ? 'text-red-500 font-medium' : 'text-gray-500'}>
+                {isCompleted
+                  ? `Completed ${formatShortDate(goal.completed_at!.split('T')[0])}`
+                  : isOverdue
+                  ? `Overdue by ${Math.abs(days!)} day${Math.abs(days!) !== 1 ? 's' : ''}`
+                  : days === 0
+                  ? 'Due today!'
+                  : `${days} day${days !== 1 ? 's' : ''} left`}
+              </span>
+            </span>
+            {timePct !== null && (
+              <span
+                className={`font-medium tabular-nums ${
+                  isOverdue ? 'text-red-500' : timePct >= 75 ? 'text-amber-500' : 'text-gray-400'
+                }`}
+              >
+                {timePct}% time used
+              </span>
+            )}
+          </div>
+          {timePct !== null && (
+            <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${timePct}%`,
+                  backgroundColor: isOverdue
+                    ? '#ef4444'
+                    : timePct >= 75
+                    ? '#f59e0b'
+                    : '#86efac',
+                }}
+              />
+            </div>
+          )}
+          {!isCompleted && goal.target_date && (
+            <p className="text-[10px] text-gray-400">{formatShortDate(goal.target_date)}</p>
+          )}
         </div>
       )}
 
